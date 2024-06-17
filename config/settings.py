@@ -17,7 +17,6 @@ INSTALLED_APPS = [
     'urls',
 
     'rest_framework',
-    'flat_json_widget',
 ]
 
 MIDDLEWARE = [
