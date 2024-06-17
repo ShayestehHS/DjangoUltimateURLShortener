@@ -119,3 +119,7 @@ class TestUrlModel(CustomTestCase):
                     Validate token is valid * 5
                 """
                 Url.objects.create(url='https://example2.com')
+
+    def test_create_url_object_with_ready_to_set_token_url_address(self):
+        with self.assertRaisesMessage(ValidationError, "You can not use ready_to_set_token_url"):
+            Url.objects.create(url=settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL)
