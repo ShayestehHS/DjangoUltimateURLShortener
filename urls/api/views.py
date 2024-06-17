@@ -14,6 +14,6 @@ class RedirectAPIView(APIView):
                    .filter(token=self.kwargs["token"])
                    .only("url")
                    .first())
-        if url_obj:
-            return HttpResponseRedirect(redirect_to=url_obj.url)
-        return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
+        if not url_obj:
+            return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
+        return HttpResponseRedirect(redirect_to=url_obj.url)
