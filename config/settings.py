@@ -71,6 +71,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 URL_SHORTENER_BASE_URL = 'http://localhost:8000/u'
+URL_SHORTENER_404_PAGE = 'https://localhost:8000/404'
 URL_SHORTENER_MAXIMUM_URL_CHARS = 5
 URL_SHORTENER_MAXIMUM_RECURSION_DEPTH = 5
 URL_SHORTENER_READY_TO_SET_TOKEN_URL = 'https://shayestehhs.com'
