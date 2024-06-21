@@ -24,8 +24,17 @@ def is_https(value):
     if not value.startswith('https://'):
         raise ValidationError('The URL should start with https://')
 
+
 def get_default_expiration_date():
     return now() + timedelta(days=DEFAULT_EXPIRATION_DAYS)
+
+
+def validate_not_naive(value):
+    if value is None:
+        return  # Skip validation if value is None (handle this according to your use case)
+
+    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+        raise ValidationError('The datetime must be timezone-aware.')
 
 
 class Url(TimeStampModel):
@@ -85,3 +94,12 @@ class UrlUser(models.Model):
 
     def __str__(self):
         return str(self.user)
+
+
+class UrlUsage(models.Model):
+    url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="usages")
+    created_at = models.DateTimeField(validators=[validate_not_naive])
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from django.utils.timezone import now
 from rest_framework.views import APIView
 
 from urls.models import Url
+from urls.tasks import log_the_url_usages
 
 
 class RedirectAPIView(APIView):
@@ -16,4 +18,6 @@ class RedirectAPIView(APIView):
                    .first())
         if not url_obj:
             return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
+
+        log_the_url_usages.delay(url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'"))
         return HttpResponseRedirect(redirect_to=url_obj.url)

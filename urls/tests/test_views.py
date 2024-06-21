@@ -1,7 +1,9 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -16,13 +18,17 @@ class TestRedirectUrlView(TestCase):
     def setUp(self) -> None:
         Url.objects.filter(pk__gte=1).delete()
 
-    def test_redirect_with_valid_token(self):
+    @patch("urls.tasks.log_the_url_usages.delay")
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_redirect_with_valid_token(self, mock_log_the_url_usages):
         url = Url.objects.create(url="https://example.com")
 
         with self.assertNumQueries(1):
             response = self.client.get(get_redirect_url(url.token))
             self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-            self.assertEqual(response["location"], url.url)
+
+        self.assertEqual(response["location"], url.url)
+        mock_log_the_url_usages.assert_called_once()
 
     def test_redirect_with_invalid_token(self):
         with self.assertNumQueries(1):
