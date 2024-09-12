@@ -1,8 +1,8 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from django.utils.timezone import now
-from rest_framework.exceptions import ValidationError
 
 READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 
@@ -28,10 +28,10 @@ class UrlManager(models.Manager):
     def create(self, url, **kwargs):
         if url == READY_TO_SET_TOKEN_URL:
             # If you want to create ready_to_set_token_object you have to use create_ready_to_set_token function
-            raise ValidationError({"url": "You can not use ready_to_set_token_url"})
+            raise ValidationError("You can not use ready_to_set_token_url")
 
         if kwargs.pop("token", None):
-            raise ValidationError({"url": "You can not pass token manually."})
+            raise ValidationError("You can not pass token manually.")
 
         ready_to_set_token_obj = self.all_ready_to_set_token().first()
         if not ready_to_set_token_obj:

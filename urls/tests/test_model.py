@@ -2,8 +2,8 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils.timezone import now
-from rest_framework.exceptions import ValidationError
 
 from urls.models import Url
 from string import ascii_letters, digits
