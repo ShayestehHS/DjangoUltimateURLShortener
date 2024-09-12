@@ -49,10 +49,10 @@ class Url(TimeStampModel):
         return f"{settings.URL_SHORTENER_BASE_URL}/{self.token}/"
 
     @property
-    def is_expired(self):
-        if self.expiration_date and self.expiration_date <= datetime.now():
-            return True
-        return False
+    def is_active(self):
+        if self.expiration_date and self.expiration_date <= now():
+            return False
+        return True
 
     @classmethod
     def _create_random_string(cls):
