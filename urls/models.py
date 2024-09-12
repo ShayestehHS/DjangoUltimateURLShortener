@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from string import ascii_letters, digits
 from urls.querysets import UrlManager
 from utils.models import TimeStampModel
+from utils.validators import is_https, validate_not_naive
 
 SIZE = settings.URL_SHORTENER_MAXIMUM_URL_CHARS
 BASE_URL = settings.URL_SHORTENER_BASE_URL
@@ -20,21 +21,9 @@ User = settings.AUTH_USER_MODEL
 AVAILABLE_CHARS = ascii_letters + digits
 
 
-def is_https(value):
-    if not value.startswith('https://'):
-        raise ValidationError('The URL should start with https://')
-
 
 def get_default_expiration_date():
     return now() + timedelta(days=DEFAULT_EXPIRATION_DAYS)
-
-
-def validate_not_naive(value):
-    if value is None:
-        return  # Skip validation if value is None (handle this according to your use case)
-
-    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
-        raise ValidationError('The datetime must be timezone-aware.')
 
 
 class Url(TimeStampModel):
