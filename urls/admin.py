@@ -22,6 +22,7 @@ class UrlAdmin(admin.ModelAdmin):
     }
     inlines = [UrlUserInline]
     ordering = ("-updated_at", )
+    search_fields = ("token", "url")
 
     def is_active(self, obj):
         return obj.is_active
