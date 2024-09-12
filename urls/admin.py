@@ -1,15 +1,9 @@
 from django.contrib import admin
 from django.db import models
 
-from urls.models import Url, UrlUser
+from urls.models import Url
 
 from flat_json_widget.widgets import FlatJsonWidget
-
-
-class UrlUserInline(admin.TabularInline):
-    model = UrlUser
-    extra = 1
-    autocomplete_fields = ["user"]
 
 
 @admin.register(Url)
@@ -20,7 +14,6 @@ class UrlAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.JSONField: {'widget': FlatJsonWidget}
     }
-    inlines = [UrlUserInline]
     ordering = ("-updated_at", )
     search_fields = ("token", "url")
 
