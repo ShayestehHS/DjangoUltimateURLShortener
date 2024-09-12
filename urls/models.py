@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 from random import choice
 
 from django.conf import settings
@@ -7,7 +7,7 @@ from django.db import models
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 from string import ascii_letters, digits
-from urls.querysets import UrlQuerySet
+from urls.querysets import UrlManager
 from utils.models import TimeStampModel
 
 SIZE = settings.URL_SHORTENER_MAXIMUM_URL_CHARS
@@ -42,7 +42,7 @@ class Url(TimeStampModel):
     token = models.CharField(max_length=MAXIMUM_URL_CHARS, editable=False)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
 
-    objects = UrlQuerySet().as_manager()
+    objects = UrlManager()
 
     @property
     def short_url(self):

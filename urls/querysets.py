@@ -14,6 +14,17 @@ class UrlQuerySet(models.QuerySet):
     def all_actives(self):
         return self.all().filter(expiration_date__gte=now())
 
+
+class UrlManager(models.Manager):
+    def get_queryset(self):
+        return UrlQuerySet(model=self.model, using=self._db)
+
+    def all(self):
+        return self.get_queryset().all()
+
+    def all_actives(self):
+        return self.get_queryset().all_actives()
+
     def create(self, url, **kwargs):
         if url == READY_TO_SET_TOKEN_URL:
             # If you want to create ready_to_set_token_object you have to use create_ready_to_set_token function
@@ -32,7 +43,6 @@ class UrlQuerySet(models.QuerySet):
         ready_to_set_token_obj.created_at = now()
         ready_to_set_token_obj.save()
         return ready_to_set_token_obj
-
 
     def create_ready_to_set_token(self):
         return super().create(url=READY_TO_SET_TOKEN_URL, token=self.model.create_token())
