@@ -1,11 +1,7 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
-
-from datetime import datetime
 
 from django.utils.timezone import now
-from pytz import UTC
 from rest_framework.exceptions import ValidationError
 
 READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
@@ -16,7 +12,7 @@ class UrlQuerySet(models.QuerySet):
         return super(UrlQuerySet, self).all().exclude(url=READY_TO_SET_TOKEN_URL)
 
     def all_actives(self):
-        return self.all().filter(expiration_date__gte=datetime.now(UTC))
+        return self.all().filter(expiration_date__gte=now())
 
     def create(self, url, **kwargs):
         if url == READY_TO_SET_TOKEN_URL:

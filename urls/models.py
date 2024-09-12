@@ -50,7 +50,7 @@ class Url(TimeStampModel):
 
     @property
     def is_expired(self):
-        if self.expiration_date and self.expiration_date <= datetime.now(timezone.utc):
+        if self.expiration_date and self.expiration_date <= datetime.now():
             return True
         return False
 
