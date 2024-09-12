@@ -14,7 +14,7 @@ class UrlUserInline(admin.TabularInline):
 
 @admin.register(Url)
 class UrlAdmin(admin.ModelAdmin):
-    fields = ("url", "short_url", "created_at", "expiration_date", "query_params")
+    fields = ("url", "short_url", "created_at", "expiration_date")
     readonly_fields = ("short_url", "created_at",)
     list_display = ("__str__", "token", "created_at", "is_expired")
     formfield_overrides = {
