@@ -1,4 +1,5 @@
 from datetime import timedelta
+from random import choice
 from unittest.mock import patch
 
 from django.conf import settings
@@ -8,7 +9,8 @@ from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.reverse import reverse
 
-from urls.models import Url
+from urls.models import Url, AVAILABLE_CHARS
+
 
 def get_redirect_url(token):
     return reverse("urls:redirect", kwargs={"token": token})
@@ -51,3 +53,17 @@ class TestRedirectUrlView(TestCase):
             response = self.client.get(get_redirect_url(url.token))
             self.assertEqual(response.status_code, status.HTTP_302_FOUND)
             self.assertEqual(response["location"], settings.URL_SHORTENER_404_PAGE)
+
+    def test_redirect_with_long_token_raise_404(self):
+        with self.assertNumQueries(0):
+            token = "".join([choice(AVAILABLE_CHARS) for _ in range(settings.URL_SHORTENER_MAXIMUM_URL_CHARS + 1)])
+            url = get_redirect_url(token)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.json())
+
+    def test_redirect_with_short_token_raise_404(self):
+        with self.assertNumQueries(0):
+            token = "".join([choice(AVAILABLE_CHARS) for _ in range(settings.URL_SHORTENER_MAXIMUM_URL_CHARS - 1)])
+            url = get_redirect_url(token)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.json())
