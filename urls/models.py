@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from string import ascii_letters, digits
 from urls.querysets import UrlManager
 from utils.models import TimeStampModel
-from utils.validators import is_https, validate_not_naive
+from utils.validators import is_https
 
 SIZE = settings.URL_SHORTENER_MAXIMUM_URL_CHARS
 BASE_URL = settings.URL_SHORTENER_BASE_URL
@@ -83,9 +83,9 @@ class UrlUser(models.Model):
         return str(self.user)
 
 
-class UrlUsage(models.Model):
+class UrlUsage(TimeStampModel):
     url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="usages")
-    created_at = models.DateTimeField(validators=[validate_not_naive])
+    updated_at = None
 
     def save(self, *args, **kwargs):
         self.full_clean()
