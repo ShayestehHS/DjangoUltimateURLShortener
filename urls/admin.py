@@ -10,6 +10,7 @@ class UrlAdmin(admin.ModelAdmin):
     list_display = ("__str__", "token", "created_at", "is_active")
     ordering = ("-updated_at", )
     search_fields = ("token", "url")
+    search_help_text = "Search by 'URL' or 'Token' to quickly find specific records."
 
     def is_active(self, obj):
         return obj.is_active
