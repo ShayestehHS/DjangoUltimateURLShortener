@@ -8,19 +8,18 @@ READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 
 
 class UrlQuerySet(models.QuerySet):
-    def all(self):
-        return super(UrlQuerySet, self).all().exclude(url=READY_TO_SET_TOKEN_URL)
-
     def all_actives(self):
-        return self.all().filter(expiration_date__gte=now())
+        return self.exclude_ready_to_set_urls().filter(expiration_date__gte=now())
 
+    def exclude_ready_to_set_urls(self):
+        return self.all().exclude(url=READY_TO_SET_TOKEN_URL)
 
 class UrlManager(models.Manager):
     def get_queryset(self):
         return UrlQuerySet(model=self.model, using=self._db)
 
-    def all(self):
-        return self.get_queryset().all()
+    def exclude_ready_to_set_urls(self):
+        return self.get_queryset().exclude_ready_to_set_urls()
 
     def all_actives(self):
         return self.get_queryset().all_actives()
