@@ -123,3 +123,25 @@ class TestUrlModel(CustomTestCase):
     def test_create_url_object_with_ready_to_set_token_url_address(self):
         with self.assertRaisesMessage(ValidationError, "You can not use ready_to_set_token_url"):
             Url.objects.create(url=settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL)
+
+    def test_create_url_object_with_expired_token_but_not_case_sensitive_match(self):
+        test_code = "aBcDe"
+        with patch("urls.models.Url._create_random_string", return_value=test_code.lower()):
+            Url.objects.create(url='https://example.com', expiration_date=now() + timedelta(days=3))
+
+        with patch("urls.models.Url._create_random_string", return_value=test_code.upper()):
+            with self.assertNumQueries(3):
+                """
+                    1- Check for ready_to_set_token URL -> should fail
+                    2- Create random token and check is valid or not
+                    3- Insert created token to the DB
+                """
+                Url.objects.create(url='https://example2.com', expiration_date=now()+ timedelta(days=3))
+
+    def test_get_url_object_is_case_sensitive(self):
+        test_code = "aBcDe"
+        with patch("urls.models.Url._create_random_string", return_value=test_code.lower()):
+            Url.objects.create(url='https://example.com', expiration_date=now() + timedelta(days=3))
+
+        with self.assertRaises(Url.DoesNotExist):
+            Url.objects.get(token=test_code.upper())
