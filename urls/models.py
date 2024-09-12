@@ -35,6 +35,9 @@ class Url(TimeStampModel):
 
     @property
     def short_url(self):
+        if not self.token:
+            # Ensure 'token' is not None before displaying 'short_url' to avoid empty URL path
+            return "-"
         return f"{settings.URL_SHORTENER_BASE_URL}/{self.token}/"
 
     @property
