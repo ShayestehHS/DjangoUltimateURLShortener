@@ -1,10 +1,16 @@
 import os
 from datetime import timedelta
-
+from dotenv import load_dotenv
 from celery import Celery
 from celery.schedules import crontab
+import django
+load_dotenv()
 
 celery_app = Celery('config')
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+django.setup()
+
 
 celery_app.conf.broker_url = f"redis://{os.environ['REDIS_USERNAME']}:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:6379/2"
 celery_app.conf.imports = ["urls.tasks"]
