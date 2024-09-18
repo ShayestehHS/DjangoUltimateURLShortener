@@ -12,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 
-celery_app.conf.broker_url = f"redis://{os.environ['REDIS_USERNAME']}:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:6379/2"
+celery_app.conf.broker_url = f"redis://{os.environ['REDIS_HOST']}:6379/2"
 celery_app.conf.imports = ["urls.tasks"]
 celery_app.conf.result_backend = f"rpc://redis:6379/3"
 celery_app.conf.task_serializer = 'json'
