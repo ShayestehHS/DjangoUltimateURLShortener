@@ -94,3 +94,7 @@ URL_SHORTENER_READY_TO_SET_TOKEN_LIMIT = 10
 URL_SHORTENER_MAXIMUM_RECURSION_DEPTH = 5
 URL_SHORTENER_READY_TO_SET_TOKEN_URL = "https://shayestehhs.com"
 URL_SHORTENER_DEFAULT_EXPIRATION_DAYS = 365 * 5
+
+import socket
+if socket.gethostname()=="localhost":
+    from local_settings import *

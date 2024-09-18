@@ -4,10 +4,12 @@ from rest_framework.routers import DefaultRouter
 
 
 router = DefaultRouter()
-router.register(r"redirectapiview", views.RedirectAPIView, basename="user")
+router.register(r"shortener", views.RedirectAPIView, basename="user")
 app_name = "urls"
 
 urlpatterns = [
-    path("<str:token>/", views.RedirectAPIView.as_view(), name="redirect"),
+    # path("<str:token>/", views.RedirectAPIView.as_view(), name="redirect"),
     path('',include(router.urls))
 ] 
+
+

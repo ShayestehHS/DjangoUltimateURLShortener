@@ -3,8 +3,8 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
-    path('u/admin/', admin.site.urls),
-    path('u/', include("urls.api.urls")),
+    path('user/admin/', admin.site.urls),
+    path('user/', include("urls.api.urls")),
 
     # YOUR PATTERNS
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
