@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "urls",
     "rest_framework",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -74,9 +75,17 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# REDIS_USERNAME = os.getenv("REDIS_USERNAME")
-# REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-# REDIS_HOST = os.getenv("REDIS_HOST")
+REST_FRAMEWORK = {
+    # YOUR SETTINGS
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "url shortener",
+    "DESCRIPTION": "This repository contains a URL shortener service that generates and manages short URLs. The service is optimized for performance using caching mechanisms and custom database indexing. A Celery-based task periodically manages the availability of tokens.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # OTHER SETTINGS
+}
 
 URL_SHORTENER_BASE_URL = "http://localhost:8000/u"
 URL_SHORTENER_404_PAGE = "https://localhost:8000/404"

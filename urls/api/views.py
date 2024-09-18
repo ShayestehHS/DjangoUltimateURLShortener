@@ -2,16 +2,15 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.utils.timezone import now
 from rest_framework.exceptions import NotFound
-from rest_framework.views import APIView
-
+from rest_framework import viewsets
 from urls.models import Url
 from urls.tasks import log_the_url_usages
 
 
-class RedirectAPIView(APIView):
+class RedirectAPIView(viewsets):
     authorization_classes = []
 
-    def get(self, *args, **kwargs):
+    def list(self, *args, **kwargs):
         token = self.kwargs["token"]
         if len(token) != settings.URL_SHORTENER_MAXIMUM_URL_CHARS:
             raise NotFound({"token": "Given token not found."})
