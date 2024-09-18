@@ -79,11 +79,14 @@ REST_FRAMEWORK = {
     # YOUR SETTINGS
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "url shortener",
     "DESCRIPTION": "This repository contains a URL shortener service that generates and manages short URLs. The service is optimized for performance using caching mechanisms and custom database indexing. A Celery-based task periodically manages the availability of tokens.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    'SORT_OPERATIONS': False,
     # OTHER SETTINGS
 }
 

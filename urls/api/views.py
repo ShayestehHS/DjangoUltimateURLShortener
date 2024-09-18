@@ -25,3 +25,29 @@ class RedirectAPIView(viewsets.ViewSet):
 
         log_the_url_usages.delay(url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'"))
         return HttpResponseRedirect(redirect_to=url_obj.url)
+
+
+    @action(detail=False, methods=["get"])
+    def get_short_url_data(self, short_url):
+        pass
+
+    @action(detail=False, methods=["post"])
+    def shorten(self, long_url):
+        pass
+
+
+    @action(detail=True, methods=["put"])
+    def change_short_url_with_long(self, long_url):
+        pass
+
+    @action(detail=True, methods=["put"])
+    def change_short_url_with_short(self, shor_url):
+        pass
+
+    @action(detail=True, methods=["delete"])
+    def delete_short_url_with_short(self, shor_url):
+        pass
+
+    @action(detail=True, methods=["delete"])
+    def delete_short_url_with_long(self, long_url):
+        pass
