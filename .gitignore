@@ -10,3 +10,5 @@
 **/.idea
 /requirements.txt
 /db.sqlite3
+
+.env
