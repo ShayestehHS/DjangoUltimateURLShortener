@@ -2,6 +2,13 @@ from django.contrib import admin
 from .models import UrlUsage,UrlUser
 from urls.models import Url
 from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+
+admin.site.unregister(User)
+@admin.register(User)
+class CustomUserAdmin(BaseUserAdmin):
+    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff')
+    search_fields = ('id', 'username', 'email')
 
 
 @admin.register(Url)
