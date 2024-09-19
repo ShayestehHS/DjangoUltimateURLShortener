@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import UrlUsage,UrlUser
 from urls.models import Url
+from django.contrib.auth.models import User
 
 
 @admin.register(Url)
@@ -17,6 +18,8 @@ class UrlAdmin(admin.ModelAdmin):
 
     is_active.short_description = 'Is Active'
     is_active.boolean = True
+
+
 
 
 admin.site.register(UrlUser)

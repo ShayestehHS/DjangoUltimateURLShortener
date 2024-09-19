@@ -21,7 +21,6 @@ User = settings.AUTH_USER_MODEL
 AVAILABLE_CHARS = ascii_letters + digits
 
 
-
 def get_default_expiration_date():
     return now() + timedelta(days=DEFAULT_EXPIRATION_DAYS)
 
@@ -73,8 +72,12 @@ class Url(TimeStampModel):
 
     class Meta:
         indexes = [
-            models.Index(fields=['url'], name='ready_to_set_token_urls', condition=models.Q(url=READY_TO_SET_TOKEN_URL)),
-            HashIndex(fields=["token"])
+            models.Index(
+                fields=["url"],
+                name="ready_to_set_token_urls",
+                condition=models.Q(url=READY_TO_SET_TOKEN_URL),
+            ),
+            HashIndex(fields=["token"]),
         ]
 
 
@@ -88,6 +91,7 @@ class UrlUser(models.Model):
 
 class UrlUsage(TimeStampModel):
     url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="usages")
+    seen = models.IntegerField(null=True, blank=True)
     updated_at = None
 
     def save(self, *args, **kwargs):

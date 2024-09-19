@@ -3,11 +3,74 @@ from django.http import HttpResponseRedirect
 from django.utils.timezone import now
 from rest_framework.exceptions import NotFound
 from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.decorators import action
-
+from rest_framework.response import Response
 from urls.models import Url
+from drf_spectacular.utils import extend_schema
+from django.contrib.auth.models import User
 from urls.tasks import log_the_url_usages
 from rest_framework.response import Response
+from .serializers import (
+    UrlSerializer,
+    UrlUsageSerializer,
+    UrlUserSerializer,
+    UserCreateSerializer,
+    UserEditSerializer,
+)
+from django import shortcuts
+
+
+class UserView(viewsets.ViewSet):
+    def get_queryset(self):
+        return User.objects.all()
+
+    @extend_schema(
+        request=UserCreateSerializer,
+        responses={201: UserCreateSerializer},
+        description="Endpoint for user registration",
+    )
+    def create(self, request):
+        serializer = UserCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            User.objects.create(**serializer.validated_data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        data = self.get_queryset()
+        serilizer = UserCreateSerializer(data, many=True)
+        return Response(serilizer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        data = self.get_queryset()
+        user = shortcuts.get_object_or_404(data, pk=pk)
+        serilizer = UserCreateSerializer(user)
+        return Response(serilizer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=UserEditSerializer,
+        responses={201: UserEditSerializer},
+        description="edit user",
+    )
+    def update(self, request, pk=None):
+        data = self.get_queryset()
+        user = shortcuts.get_object_or_404(data, pk=pk)
+        update_serilizer = UserEditSerializer(
+            instance=user, data=request.data, partial=True
+        )
+        if update_serilizer.is_valid():
+            update_serilizer.save()
+            return Response(update_serilizer.data, status=status.HTTP_200_OK)
+        return Response(update_serilizer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        data = self.get_queryset()
+        user = shortcuts.get_object_or_404(data, pk=pk)
+        if user:
+            user.delete()
+            return Response("user deleted", status=status.HTTP_200_OK)
+        return Response("user not found", status=status.HTTP_404_NOT_FOUND)
 
 
 class RedirectAPIView(viewsets.ViewSet):
@@ -26,28 +89,39 @@ class RedirectAPIView(viewsets.ViewSet):
         log_the_url_usages.delay(url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'"))
         return HttpResponseRedirect(redirect_to=url_obj.url)
 
-
     @action(detail=False, methods=["get"])
     def get_short_url_data(self, short_url):
         pass
 
-    @action(detail=False, methods=["post"])
-    def shorten(self, long_url):
-        pass
+    @extend_schema(
+        request=UrlUserSerializer,
+        responses={201: UrlUserSerializer},
+        description="Endpoint for user registration",
+    )
+    def create(self, request):
+        serializer = UrlUserSerializer(data=request.data)
+        long_url = request.data.get("long_url")
+        user = request.data.get("user_id")
+        if serializer.is_valid():
+            long_url = serializer.validated_data["long_url"]
+            return Response(UrlSerializer.data, status=status.HTTP_201_CREATED)
 
+        return Response(
+            {"error": "No URL provided."}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(detail=True, methods=["put"])
-    def change_short_url_with_long(self, long_url):
+    def change_short_url_with_long(self, request):
         pass
 
     @action(detail=True, methods=["put"])
-    def change_short_url_with_short(self, shor_url):
+    def change_short_url_with_short(self, request):
         pass
 
     @action(detail=True, methods=["delete"])
-    def delete_short_url_with_short(self, shor_url):
+    def delete_short_url_with_short(self, request):
         pass
 
     @action(detail=True, methods=["delete"])
-    def delete_short_url_with_long(self, long_url):
+    def delete_short_url_with_long(self, request):
         pass
