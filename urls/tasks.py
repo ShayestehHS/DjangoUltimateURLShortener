@@ -20,3 +20,11 @@ def create_ready_to_set_token_periodically():
 def log_the_url_usages(url_id, created_at):
     # ToDo: Use bulk create instead
     UrlUsage.objects.create(url_id=url_id, created_at=datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z',))
+
+@shared_task()
+def delete_short_url(short_url):
+    pass
+
+@shared_task()
+def delete_short_irl_with_long(long_url):
+    pass
