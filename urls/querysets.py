@@ -30,8 +30,10 @@ class UrlManager(models.Manager):
             # If you want to create ready_to_set_token_object you have to use create_ready_to_set_token function
             raise ValidationError("You can not use ready_to_set_token_url")
 
-        if kwargs.pop("token", None):
-            raise ValidationError("You can not pass token manually.")
+        if suggested_token := kwargs.pop("token", None):
+            if self.get_queryset().all_actives().filter(token=suggested_token).exists():
+                raise ValidationError("This token is already active.")
+            return super().create(url=url, token=suggested_token, **kwargs)
 
         ready_to_set_token_obj = self.all_ready_to_set_token().first()
         if not ready_to_set_token_obj:
