@@ -77,7 +77,10 @@ class TestUrlModel(CustomTestCase):
         self.assertIsNotNone(url.token)
         self.assertEqual(url.created_at.date(), now().date())
         self.assertEqual(url.expiration_date.day, (now() + timedelta(days=getattr(settings, "URL_SHORTENER_DEFAULT_EXPIRATION_DAYS"))).day)
-        self.assertEquals(Url.objects.all_ready_to_set_token().count(), 1)
+
+        self.assertTrue(Url.objects.all_actives().filter(id=url.id).exists())
+        self.assertTrue(Url.objects.all_ready_to_set_token().filter(id=url.id).exists())
+        self.assertNotIn(url, Url.objects.exclude_ready_to_set_urls().all())
 
     def test_create_url_with_existent_ready_to_set_token_success(self):
         ready_to_set_url_obj: Url = Url.objects.create_ready_to_set_token()
