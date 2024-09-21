@@ -11,15 +11,14 @@ from urls.querysets import UrlManager
 from utils.models import TimeStampModel
 from utils.validators import is_https
 
-SIZE = settings.URL_SHORTENER_MAXIMUM_URL_CHARS
 BASE_URL = settings.URL_SHORTENER_BASE_URL
-MAXIMUM_URL_CHARS = settings.URL_SHORTENER_MAXIMUM_URL_CHARS
+MAXIMUM_URL_LENGTH = settings.URL_SHORTENER_MAXIMUM_URL_LENGTH
+MAXIMUM_TOKEN_LENGTH = settings.URL_SHORTENER_MAXIMUM_TOKEN_LENGTH
 MAXIMUM_RECURSION_DEPTH = settings.URL_SHORTENER_MAXIMUM_RECURSION_DEPTH
 READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 DEFAULT_EXPIRATION_DAYS = settings.URL_SHORTENER_DEFAULT_EXPIRATION_DAYS
 User = settings.AUTH_USER_MODEL
 AVAILABLE_CHARS = ascii_letters + digits
-
 
 
 def get_default_expiration_date():
@@ -28,7 +27,7 @@ def get_default_expiration_date():
 
 class Url(TimeStampModel):
     url = models.URLField(max_length=255, validators=[is_https], null=True, blank=True)
-    token = models.CharField(max_length=MAXIMUM_URL_CHARS, editable=False)
+    token = models.CharField(max_length=MAXIMUM_URL_LENGTH, editable=False)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
 
     objects = UrlManager()
@@ -48,7 +47,7 @@ class Url(TimeStampModel):
 
     @classmethod
     def _create_random_string(cls):
-        return "".join([choice(AVAILABLE_CHARS) for _ in range(5)])
+        return "".join([choice(AVAILABLE_CHARS) for _ in range(MAXIMUM_TOKEN_LENGTH)])
 
     @classmethod
     def create_token(cls):

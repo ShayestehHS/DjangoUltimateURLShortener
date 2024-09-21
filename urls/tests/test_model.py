@@ -58,7 +58,7 @@ class TestUrlModel(CustomTestCase):
 
         self.assertEqual(url.url, 'https://example.com')
         self.assertNotEqual(url.url, settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL)
-        self.assertEqual(len(url.token), settings.URL_SHORTENER_MAXIMUM_URL_CHARS)
+        self.assertEqual(len(url.token), settings.URL_SHORTENER_MAXIMUM_TOKEN_LENGTH)
         self.assertEqual(url.created_at.date(), now().date())
         self.assertEqual(url.expiration_date.day, (now() + timedelta(days=getattr(settings, "URL_SHORTENER_DEFAULT_EXPIRATION_DAYS"))).day)
         self.assertEqual(Url.objects.all().count(), 1)
