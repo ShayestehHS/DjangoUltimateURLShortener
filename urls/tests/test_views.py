@@ -17,9 +17,6 @@ def get_redirect_url(token):
 
 
 class TestRedirectUrlView(APITestCase):
-    def setUp(self) -> None:
-        Url.objects.filter(pk__gte=1).delete()
-
     @patch("urls.tasks.log_the_url_usages.delay")
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_redirect_view_with_valid_token_redirect_to_correct_url(self, mock_log_the_url_usages):
