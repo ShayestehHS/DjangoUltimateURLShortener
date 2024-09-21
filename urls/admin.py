@@ -11,14 +11,19 @@ class UrlAdminForm(ModelForm):
         model = Url
         fields = ("url", "token", "expiration_date")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['token'].required = False
+
     def clean_token(self):
-        token = self.cleaned_data["token"]
-        if (Url.objects
+        token = self.cleaned_data.get("token")
+        if token and (Url.objects
                 .all_actives()
                 .exclude_ready_to_set_urls()
                 .filter(token=token)
                 .exists()):
             raise ValidationError("This token is active.")
+        return token
 
     def clean_url(self):
         url = self.cleaned_data["url"]
@@ -26,6 +31,7 @@ class UrlAdminForm(ModelForm):
             raise ValidationError("You can not use insecure URL.")
         if url == settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL:
             raise ValidationError("You can not use this url because it is a reserved url.")
+        return url
 
 
 @admin.register(Url)
