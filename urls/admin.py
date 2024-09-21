@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
 
-from urls.models import Url
+from urls.models import Url, UrlUsage
 
 
 class UrlAdminForm(ModelForm):
@@ -49,3 +49,17 @@ class UrlAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         Url.objects.create(**form.cleaned_data)
+
+
+@admin.register(UrlUsage)
+class UrlUsageAdmin(admin.ModelAdmin):
+    list_display = ("id", "url", "get_token", "created_at", )
+    ordering = ("-id", )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("url")
+
+    def get_token(self, obj: UrlUsage):
+        return obj.url.token
+    get_token.short_description = 'Token'
+
