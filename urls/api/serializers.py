@@ -9,6 +9,7 @@ class UrlSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "url","new_url", "token", "expiration_date"]
 
 
+
 class UrlSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = Url
