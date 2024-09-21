@@ -6,7 +6,12 @@ from django.contrib.auth.models import User
 class UrlSerializer(serializers.ModelSerializer):
     class Meta:
         model = Url
-        field = ["url", "token", "expiration_date"]
+        fields = ["id","url", "token", "expiration_date"]
+
+class UrlSerializerCreate(serializers.ModelSerializer):
+    class Meta:
+        model = Url
+        fields = ["url"]
 
 
 class UrlUserSerializer(serializers.ModelSerializer):

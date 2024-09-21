@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from urls.models import Url
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth.models import User
-from urls.tasks import log_the_url_usages
+from urls import tasks
 from rest_framework.response import Response
 from .serializers import (
     UrlSerializer,
@@ -17,6 +17,7 @@ from .serializers import (
     UrlUserSerializer,
     UserCreateSerializer,
     UserEditSerializer,
+    UrlSerializerCreate,
 )
 from django import shortcuts
 
@@ -72,9 +73,23 @@ class UserView(viewsets.ViewSet):
             return Response("user deleted", status=status.HTTP_200_OK)
         return Response("user not found", status=status.HTTP_404_NOT_FOUND)
 
+    def return_all_url_user(self):
+        pass
+
+    def return_user_url(self):
+        pass
+
 
 class RedirectAPIView(viewsets.ViewSet):
     authorization_classes = []
+
+    def get_queryset(self):
+        return Url.objects.all()
+    def list(self, request):
+        data = self.get_queryset()
+        serilizer = UrlSerializer(data, many=True)
+        return Response(serilizer.data, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=["get"])
     def get_data(self, request, *args, **kwargs):
@@ -86,11 +101,17 @@ class RedirectAPIView(viewsets.ViewSet):
         if not url_obj:
             return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
 
-        log_the_url_usages.delay(url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'"))
+        tasks.log_the_url_usages.delay(
+            url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'")
+        )
         return HttpResponseRedirect(redirect_to=url_obj.url)
 
     @action(detail=False, methods=["get"])
     def get_short_url_data(self, short_url):
+        pass
+
+    @action(detail=False, methods=["get"])
+    def short_url_to_general_page(self, short_url):
         pass
 
     @extend_schema(
@@ -100,15 +121,32 @@ class RedirectAPIView(viewsets.ViewSet):
     )
     def create(self, request):
         serializer = UrlUserSerializer(data=request.data)
-        long_url = request.data.get("long_url")
-        user = request.data.get("user_id")
+        # long_url = request.data.get("long_url")
+        # user = request.data.get("user_id")
         if serializer.is_valid():
-            long_url = serializer.validated_data["long_url"]
-            return Response(UrlSerializer.data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(
             {"error": "No URL provided."}, status=status.HTTP_400_BAD_REQUEST
         )
+
+    @extend_schema(
+        request=UrlSerializerCreate,
+        responses={201: UrlSerializer},
+        description="generate short url",
+    )
+    @action(detail=False, methods=["post"])
+    def generate_token(self, request):
+        serializer = UrlSerializerCreate(data=request.data)
+        if serializer.is_valid():
+            calculation = serializer.save()
+            tasks.generate_token.delay(
+                calculation.id,
+            )
+            response_serilizer = UrlSerializer(calculation)
+            return Response(response_serilizer.data, status=status.HTTP_201_CREATED)
+        return Response(response_serilizer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=["put"])
     def change_short_url_with_long(self, request):
@@ -125,3 +163,4 @@ class RedirectAPIView(viewsets.ViewSet):
     @action(detail=True, methods=["delete"])
     def delete_short_url_with_long(self, request):
         pass
+
