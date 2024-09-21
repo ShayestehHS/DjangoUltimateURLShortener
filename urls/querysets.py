@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 
 from django.utils.timezone import now
 
@@ -31,7 +32,10 @@ class UrlManager(models.Manager):
             raise ValidationError("You can not use ready_to_set_token_url")
 
         if suggested_token := kwargs.pop("token", None):
-            if self.get_queryset().all_actives().filter(token=suggested_token).exists():
+            if (self.get_queryset()
+                    .filter(token=suggested_token)
+                    .filter(Q(url=READY_TO_SET_TOKEN_URL) | Q(expiration_date__gte=now()))
+                    .exists()):
                 raise ValidationError("This token is already active.")
             return super().create(url=url, token=suggested_token, **kwargs)
 
