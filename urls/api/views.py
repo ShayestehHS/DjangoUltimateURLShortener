@@ -82,7 +82,6 @@ class UserView(viewsets.ViewSet):
 
 
 class RedirectAPIView(viewsets.ViewSet):
-    authorization_classes = []
 
     def get_queryset(self):
         return Url.objects.all()
@@ -108,11 +107,7 @@ class RedirectAPIView(viewsets.ViewSet):
     #     return HttpResponseRedirect(redirect_to=url_obj.url)
 
     @action(detail=False, methods=["get"])
-    def get_short_url_data(self, short_url):
-        pass
-
-    @action(detail=False, methods=["get"])
-    def short_url_to_general_page(self, short_url):
+    def sut_gp(self, request):
         pass
 
     @extend_schema(
@@ -122,8 +117,10 @@ class RedirectAPIView(viewsets.ViewSet):
     )
     @action(detail=False, methods=["post"])
     def generate_token(self, request):
-        serializer = UrlSerializerCreate(data=request.data,context={'request': request})
-        if serializer.is_valid():        
+        serializer = UrlSerializerCreate(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid():
             calculation = serializer.save()
             tasks.generate_token.delay(
                 calculation.id,
@@ -132,18 +129,9 @@ class RedirectAPIView(viewsets.ViewSet):
             return Response(response_serilizer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=["put"])
-    def change_short_url_with_long(self, request):
-        pass
-
-    @action(detail=True, methods=["put"])
-    def change_short_url_with_short(self, request):
-        pass
-
-    @action(detail=True, methods=["delete"])
-    def delete_short_url_with_short(self, request):
-        pass
-
-    @action(detail=True, methods=["delete"])
-    def delete_short_url_with_long(self, request):
-        pass
+    def destroy(self, request, pk=None):
+        url = Url.objects.filter(pk=pk)
+        if url:
+            tasks.delete_short_url.delay(pk)
+            return Response({"url deleted"}, status=status.HTTP_200_OK)
+        return Response({"url not found"}, status=status.HTTP_404_NOT_FOUND)

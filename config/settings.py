@@ -90,7 +90,7 @@ SPECTACULAR_SETTINGS = {
     # OTHER SETTINGS
 }
 
-URL_SHORTENER_BASE_URL = "http://localhost:8000/redirect/short_url_to_general_page/"
+URL_SHORTENER_BASE_URL = "https://localhost:8000/redirect/sut_gp"
 URL_SHORTENER_404_PAGE = "https://localhost:8000/404"
 URL_SHORTENER_MAXIMUM_URL_CHARS = 5
 URL_SHORTENER_READY_TO_SET_TOKEN_LIMIT = 10

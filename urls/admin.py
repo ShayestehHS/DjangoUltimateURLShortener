@@ -20,7 +20,7 @@ class UrlAdmin(admin.ModelAdmin):
         "short_url",
         "created_at",
     )
-    list_display = ("__str__", "user","token", "created_at", "is_active")
+    list_display = ("id","__str__", "user","token","new_url", "created_at", "is_active")
     ordering = ("-updated_at",)
     search_fields = ("token", "url")
     search_help_text = "Search by 'URL' or 'Token' to quickly find specific records."

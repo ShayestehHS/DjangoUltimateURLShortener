@@ -6,7 +6,8 @@ import uuid
 import string
 import random
 from urls.models import Url, UrlUsage
-
+from rest_framework.response import Response
+from rest_framework import status
 
 # @shared_task
 # def create_ready_to_set_token_periodically():
@@ -27,6 +28,8 @@ def generate_token(url_id):
     )
     url = Url.objects.get(pk=url_id)
     url.token = generated_token
+    new_url = settings.URL_SHORTENER_BASE_URL + url.token
+    url.new_url = new_url
     url.save()
 
 
@@ -43,8 +46,10 @@ def log_the_url_usages(url_id, created_at):
 
 
 @shared_task()
-def delete_short_url(short_url):
-    pass
+def delete_short_url(url_id):
+    url = Url.objects.get(pk =url_id)
+    url.delete()
+    
 
 
 @shared_task()
