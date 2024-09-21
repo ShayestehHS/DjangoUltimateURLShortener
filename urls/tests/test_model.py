@@ -15,9 +15,6 @@ from utils.tests import CustomTestCase
 
 
 class TestUrlModel(CustomTestCase):
-    def tearDown(self):
-        Url.objects.filter(pk__gte=1).delete()
-
     def test_create_url_with_same_token_and_not_expired_raise_maximum_recursion(self):
         url = Url.objects.create(url='https://example.com', expiration_date=now() + timedelta(days=1))
 
