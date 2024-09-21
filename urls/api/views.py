@@ -9,8 +9,10 @@ from rest_framework.views import APIView
 from urls.models import Url
 from urls.tasks import log_the_url_usages
 
+USE_CELERY_AS_USAGE_LOGGER = settings.URL_SHORTENER_USE_CELERY_AS_USAGE_LOGGER
 MAXIMUM_TOKEN_LENGTH = settings.URL_SHORTENER_MAXIMUM_TOKEN_LENGTH
 URL_PK_SEPERATOR = settings.URL_SHORTENER_URL_PK_SEPERATOR
+USE_CACHE = settings.URL_SHORTENER_USE_CACHE
 
 
 class RedirectAPIView(APIView):
@@ -21,7 +23,7 @@ class RedirectAPIView(APIView):
         if len(token) != MAXIMUM_TOKEN_LENGTH:
             return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
 
-        if cached_value := cache.get(token):
+        if USE_CACHE and (cached_value := cache.get(token)):
             split_list = cached_value.split(URL_PK_SEPERATOR)
             redirect_url = split_list[0]
             url_pk = split_list[-1]
@@ -32,13 +34,18 @@ class RedirectAPIView(APIView):
 
             redirect_url = url_obj.url
             url_pk = url_obj.pk
-            cache.set(token, f"{redirect_url}{URL_PK_SEPERATOR}{url_pk}", url_obj.remaining_seconds)
+            if USE_CACHE:
+                cache.set(token, f"{redirect_url}{URL_PK_SEPERATOR}{url_pk}", url_obj.remaining_seconds.seconds)
 
         self.log_the_url_usages(url_pk)
         return HttpResponseRedirect(redirect_to=redirect_url)
 
     def log_the_url_usages(self, url_pk):
-        log_the_url_usages.delay(url_pk, now().strftime("%Y-%m-%d %H:%M:%S %z'"))
+        usage_log_args = (url_pk, now().strftime("%Y-%m-%d %H:%M:%S %z"))
+        if USE_CELERY_AS_USAGE_LOGGER:
+            log_the_url_usages.delay(*usage_log_args)
+        else:
+            log_the_url_usages(*usage_log_args)
 
     def get_object(self, token):
         return (
