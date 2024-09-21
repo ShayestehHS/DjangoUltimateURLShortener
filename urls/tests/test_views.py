@@ -3,11 +3,11 @@ from random import choice
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.reverse import reverse
+from rest_framework.test import APITestCase
 
 from urls.models import Url, AVAILABLE_CHARS
 
@@ -16,7 +16,7 @@ def get_redirect_url(token):
     return reverse("urls:redirect", kwargs={"token": token})
 
 
-class TestRedirectUrlView(TestCase):
+class TestRedirectUrlView(APITestCase):
     def setUp(self) -> None:
         Url.objects.filter(pk__gte=1).delete()
 
