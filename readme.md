@@ -20,6 +20,7 @@ A Celery-based task periodically manages the availability of tokens.
 - **URL Shortening**: Convert long URLs into short, easily shareable links.
 - **Token Management**: Efficient token generation and assignment through scheduled tasks.
 - **Caching**: Optimized URL retrieval using caching mechanisms.
+- **Non-unique tokens**: The same token may be generated more than once, but **only one active** token will be valid at a time.
 - **Database Indexing**: Improved query performance with specific indexing strategies.
 
 ## How It Works
