@@ -109,6 +109,37 @@ class TestUrlModel(CustomTestCase):
         with self.assertRaisesMessage(ValidationError, "You can not use ready_to_set_token_url"):
             Url.objects.create(url=settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL)
 
+    def test_create_url_object_with_suggested_token_success(self):
+        token = Url.create_token()
+
+        with self.assertNumQueries(2):
+            Url.objects.create(url='https://example.com', token=token)
+
+        self.assertTrue(Url.objects.all_actives().filter(token=token).exists())
+
+    def test_create_url_object_with_suggested_token_but_active_token_as_input_raise_validation_error(self):
+        active_url = Url.objects.create(url='https://example.com')
+
+        with self.assertNumQueries(1):
+            with self.assertRaisesMessage(ValidationError, "This token is already active."):
+                Url.objects.create("https://example2.com", token=active_url.token)
+
+    def test_create_url_object_with_suggested_token_but_expired_token_success(self):
+        expired_url = Url.objects.create(url='https://example.com', expiration_date=now() - timedelta(days=3))
+        self.assertFalse(Url.objects.all_actives().filter(id=expired_url.id).exists())
+
+        with self.assertNumQueries(2):
+            url = Url.objects.create("https://example.com", token=expired_url.token)
+
+        self.assertTrue(Url.objects.all_actives().filter(token=url.token).exists())
+
+    def test_create_url_object_with_suggested_token_but_with_ready_to_set_token_fail(self):
+        ready_to_set_token_url_object = Url.objects.create_ready_to_set_token()
+
+        with self.assertNumQueries(1):
+            with self.assertRaisesMessage(ValidationError, "This token is already active."):
+                Url.objects.create("https://example.com", token=ready_to_set_token_url_object.token)
+
     def test_create_url_object_with_expired_token_but_not_case_sensitive_match_success(self):
         test_code = "aBcDe"
         with patch("urls.models.Url._create_random_string", return_value=test_code.lower()):
