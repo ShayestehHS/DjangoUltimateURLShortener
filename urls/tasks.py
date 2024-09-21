@@ -3,6 +3,8 @@ from .models import Url
 from celery import shared_task
 from django.conf import settings
 import uuid
+import string
+import random
 from urls.models import Url, UrlUsage
 
 
@@ -18,7 +20,11 @@ def create_ready_to_set_token_periodically():
 
 @shared_task
 def generate_token(url_id):
-    generated_token = settings.URL_SHORTENER_BASE_URL + uuid.uuid4().hex
+    generated_token = "".join(
+        random.choices(
+            string.ascii_letters + string.digits, k=settings.MAXIMUM_URL_CHARS
+        )
+    )
     url = Url.objects.get(pk=url_id)
     url.token = generated_token
     url.save()
