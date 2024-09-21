@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.utils.timezone import now
-from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 
 from urls.models import Url
@@ -13,8 +12,8 @@ class RedirectAPIView(APIView):
 
     def get(self, *args, **kwargs):
         token = self.kwargs["token"]
-        if len(token) != settings.URL_SHORTENER_MAXIMUM_URL_CHARS:
-            raise NotFound({"token": "Given token not found."})
+        if len(token) != settings.URL_SHORTENER_MAXIMUM_TOKEN_LENGTH:
+            return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
 
         url_obj = (Url.objects
                    .all_actives()
