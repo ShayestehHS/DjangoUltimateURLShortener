@@ -121,7 +121,7 @@ class TestUrlModel(CustomTestCase):
                     2- Create random token and check is valid or not
                     3- Insert created token to the DB
                 """
-                Url.objects.create(url='https://example2.com', expiration_date=now()+ timedelta(days=3))
+                Url.objects.create(url='https://example2.com', expiration_date=now() + timedelta(days=3))
 
     def test_get_url_object_with_not_case_equality_fail(self):
         test_code = "aBcDe"
