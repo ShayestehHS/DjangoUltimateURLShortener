@@ -4,21 +4,22 @@ from django.utils.timezone import now
 from rest_framework.exceptions import NotFound
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from urls.models import Url
-from drf_spectacular.utils import extend_schema
+from urls.models import Url, UrlUsage
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django.contrib.auth.models import User
-from urls.tasks import log_the_url_usages
+from urls import tasks
 from rest_framework.response import Response
 from .serializers import (
     UrlSerializer,
     UrlUsageSerializer,
-    UrlUserSerializer,
     UserCreateSerializer,
     UserEditSerializer,
+    UrlSerializerCreate,
 )
 from django import shortcuts
+from django.http import HttpResponseRedirect
 
 
 class UserView(viewsets.ViewSet):
@@ -72,56 +73,87 @@ class UserView(viewsets.ViewSet):
             return Response("user deleted", status=status.HTTP_200_OK)
         return Response("user not found", status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=["get"])
+    def return_all_url_for_one_user(self, request, pk):
+        data = self.get_queryset()
+        user = shortcuts.get_object_or_404(data, pk=pk)
+        urls = Url.objects.filter(user=user)
+        serializer = UrlSerializer(urls, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class RedirectAPIView(viewsets.ViewSet):
-    authorization_classes = []
 
-    @action(detail=True, methods=["get"])
-    def get_data(self, request, *args, **kwargs):
-        token = self.kwargs.get("pk")
-        if len(token) != settings.URL_SHORTENER_MAXIMUM_URL_CHARS:
-            raise NotFound({"token": "Given token not found."})
+    def get_queryset(self):
+        return Url.objects.all()
 
-        url_obj = Url.objects.all_actives().filter(token=token).only("url").first()
-        if not url_obj:
-            return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
+    def list(self, request):
+        data = self.get_queryset()
+        serilizer = UrlSerializer(data, many=True)
+        return Response(serilizer.data, status=status.HTTP_200_OK)
 
-        log_the_url_usages.delay(url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'"))
-        return HttpResponseRedirect(redirect_to=url_obj.url)
+    # @action(detail=True, methods=["get"])
+    # def get_data(self, request, *args, **kwargs):
+    #     token = self.kwargs.get("pk")
+    #     if len(token) != settings.URL_SHORTENER_MAXIMUM_URL_CHARS:
+    #         raise NotFound({"token": "Given token not found."})
 
-    @action(detail=False, methods=["get"])
-    def get_short_url_data(self, short_url):
-        pass
+    #     url_obj = Url.objects.all_actives().filter(token=token).only("url").first()
+    #     if not url_obj:
+    #         return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
+
+    #     tasks.log_the_url_usages.delay(
+    #         url_obj.pk, now().strftime("%Y-%m-%d %H:%M:%S %z'")
+    #     )
+    #     return HttpResponseRedirect(redirect_to=url_obj.url)
 
     @extend_schema(
-        request=UrlUserSerializer,
-        responses={201: UrlUserSerializer},
-        description="Endpoint for user registration",
+        parameters=[
+            OpenApiParameter(
+                name="token", description="url's token ", required=True, type=str
+            )
+        ],
+        responses={302: None},  # 302: Redirect response
     )
-    def create(self, request):
-        serializer = UrlUserSerializer(data=request.data)
-        long_url = request.data.get("long_url")
-        user = request.data.get("user_id")
-        if serializer.is_valid():
-            long_url = serializer.validated_data["long_url"]
-            return Response(UrlSerializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=False, methods=["get"])
+    def redirect_view(self, request):
+        token = request.query_params.get("token")
+        if token:
+            try:
+                redirect_info = Url.objects.get(token=token)
+                redirect_url = redirect_info.url
+                return HttpResponseRedirect(redirect_url)
+            except redirect_info.DoesNotExist:
+                return Response(
+                    {"error": "No matching URL for this token"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response({"error": "token is required"})
 
-        return Response(
-            {"error": "No URL provided."}, status=status.HTTP_400_BAD_REQUEST
+    @extend_schema(
+        request=UrlSerializerCreate,
+        responses={201: UrlSerializer},
+        description="generate short url",
+    )
+    @action(detail=False, methods=["post"])
+    def generate_token(self, request):
+        serializer = UrlSerializerCreate(
+            data=request.data, context={"request": request}
         )
+        if serializer.is_valid():
+            calculation = serializer.save()
+            tasks.generate_token.delay(
+                calculation.id,
+            )
+            # TODO: why serializer return false token...
+            response_serilizer = UrlSerializer(calculation)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=["put"])
-    def change_short_url_with_long(self, request):
-        pass
-
-    @action(detail=True, methods=["put"])
-    def change_short_url_with_short(self, request):
-        pass
-
-    @action(detail=True, methods=["delete"])
-    def delete_short_url_with_short(self, request):
-        pass
-
-    @action(detail=True, methods=["delete"])
-    def delete_short_url_with_long(self, request):
-        pass
+    def destroy(self, request, pk=None):
+        url = Url.objects.filter(pk=pk)
+        if url:
+            tasks.delete_short_url.delay(pk)
+            return Response({"url deleted"}, status=status.HTTP_200_OK)
+        return Response({"url not found"}, status=status.HTTP_404_NOT_FOUND)
