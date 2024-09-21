@@ -15,12 +15,12 @@ class CustomUserAdmin(BaseUserAdmin):
 
 @admin.register(Url)
 class UrlAdmin(admin.ModelAdmin):
-    fields = ("url", "short_url", "created_at", "expiration_date")
+    fields = ("user","url", "short_url", "created_at", "expiration_date")
     readonly_fields = (
         "short_url",
         "created_at",
     )
-    list_display = ("__str__", "token", "created_at", "is_active")
+    list_display = ("__str__", "user","token", "created_at", "is_active")
     ordering = ("-updated_at",)
     search_fields = ("token", "url")
     search_help_text = "Search by 'URL' or 'Token' to quickly find specific records."

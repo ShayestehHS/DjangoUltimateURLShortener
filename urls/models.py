@@ -26,11 +26,13 @@ def get_default_expiration_date():
 
 class Url(TimeStampModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="username")
-    url = models.URLField(max_length=255, validators=[is_https], null=True, blank=True)
+    url = models.URLField(max_length=255, validators=[is_https], null=True, blank=True,unique=True)
     token = models.CharField(max_length=MAXIMUM_URL_CHARS, editable=False,null=True,blank=True,unique=True)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
 
     objects = UrlManager()
+    class Meta:
+        unique_together = ('user', 'url')
 
     @property
     def short_url(self):
