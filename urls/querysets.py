@@ -10,7 +10,7 @@ READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 
 class UrlQuerySet(models.QuerySet):
     def all_actives(self):
-        return self.exclude_ready_to_set_urls().filter(expiration_date__gte=now())
+        return self.filter(expiration_date__gte=now())
 
     def exclude_ready_to_set_urls(self):
         return self.all().exclude(url=READY_TO_SET_TOKEN_URL)
