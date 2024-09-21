@@ -48,4 +48,4 @@ class UrlManager(models.Manager):
         return super().create(url=READY_TO_SET_TOKEN_URL, token=self.model.create_token())
 
     def all_ready_to_set_token(self):
-        return super().all().filter(url=READY_TO_SET_TOKEN_URL)
+        return super().all().filter(url=READY_TO_SET_TOKEN_URL).order_by()
