@@ -22,7 +22,7 @@ def create_ready_to_set_token_periodically():
 def generate_token(url_id):
     generated_token = "".join(
         random.choices(
-            string.ascii_letters + string.digits, k=settings.MAXIMUM_URL_CHARS
+            string.ascii_letters + string.digits, k=settings.URL_SHORTENER_MAXIMUM_URL_CHARS
         )
     )
     url = Url.objects.get(pk=url_id)

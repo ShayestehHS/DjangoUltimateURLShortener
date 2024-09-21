@@ -35,6 +35,7 @@ class UrlAdmin(admin.ModelAdmin):
 @admin.register(UrlUser)
 class UrlUserAdmin(admin.ModelAdmin):
     fields = ("url", "user")
+    list_display = ("url", "user")
 
 
 admin.site.register(UrlUsage)

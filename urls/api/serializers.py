@@ -17,7 +17,7 @@ class UrlSerializerCreate(serializers.ModelSerializer):
 class UrlUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UrlUser
-        fields = ["url", "user"]
+        fields = "__all__"
 
 
 class UrlUsageSerializer(serializers.ModelSerializer):

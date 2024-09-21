@@ -6,7 +6,7 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from urls.models import Url
+from urls.models import Url, UrlUser, UrlUsage
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth.models import User
 from urls import tasks
@@ -73,11 +73,13 @@ class UserView(viewsets.ViewSet):
             return Response("user deleted", status=status.HTTP_200_OK)
         return Response("user not found", status=status.HTTP_404_NOT_FOUND)
 
-    def return_all_url_user(self):
-        pass
-
-    def return_user_url(self):
-        pass
+    @action(detail=True, methods=["get"])
+    def return_all_url_for_one_user(self, request, pk):
+        data = self.get_queryset()
+        user = shortcuts.get_object_or_404(data, pk=pk)
+        urls = UrlUser.objects.filter(user=user)
+        serializer = UrlSerializer(urls, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RedirectAPIView(viewsets.ViewSet):
@@ -85,11 +87,11 @@ class RedirectAPIView(viewsets.ViewSet):
 
     def get_queryset(self):
         return Url.objects.all()
+
     def list(self, request):
         data = self.get_queryset()
         serilizer = UrlSerializer(data, many=True)
         return Response(serilizer.data, status=status.HTTP_200_OK)
-
 
     @action(detail=True, methods=["get"])
     def get_data(self, request, *args, **kwargs):
@@ -117,7 +119,7 @@ class RedirectAPIView(viewsets.ViewSet):
     @extend_schema(
         request=UrlUserSerializer,
         responses={201: UrlUserSerializer},
-        description="Endpoint for user registration",
+        description="Endpoint for creating a URL user entry",
     )
     def create(self, request):
         serializer = UrlUserSerializer(data=request.data)
@@ -127,9 +129,7 @@ class RedirectAPIView(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(
-            {"error": "No URL provided."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
         request=UrlSerializerCreate,
@@ -163,4 +163,3 @@ class RedirectAPIView(viewsets.ViewSet):
     @action(detail=True, methods=["delete"])
     def delete_short_url_with_long(self, request):
         pass
-

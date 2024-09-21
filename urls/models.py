@@ -1,6 +1,5 @@
 from datetime import timedelta
 from random import choice
-
 from django.conf import settings
 from django.contrib.postgres.indexes import HashIndex
 from django.db import models
