@@ -14,6 +14,7 @@ class UrlQuerySet(models.QuerySet):
     def exclude_ready_to_set_urls(self):
         return self.all().exclude(url=READY_TO_SET_TOKEN_URL)
 
+
 class UrlManager(models.Manager):
     def get_queryset(self):
         return UrlQuerySet(model=self.model, using=self._db)
