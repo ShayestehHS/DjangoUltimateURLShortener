@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from urls.models import Url, UrlUsage
-from drf_spectacular.utils import extend_schema,OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django.contrib.auth.models import User
 from urls import tasks
 from rest_framework.response import Response
@@ -107,13 +107,14 @@ class RedirectAPIView(viewsets.ViewSet):
     #     )
     #     return HttpResponseRedirect(redirect_to=url_obj.url)
 
-
     @extend_schema(
-    parameters=[
-        OpenApiParameter(name="token", description="url's token ", required=True, type=str)
-    ],
-    responses={302: None},  # 302: Redirect response
-)
+        parameters=[
+            OpenApiParameter(
+                name="token", description="url's token ", required=True, type=str
+            )
+        ],
+        responses={302: None},  # 302: Redirect response
+    )
     @action(detail=False, methods=["get"])
     def redirect_view(self, request):
         token = request.query_params.get("token")
@@ -145,6 +146,7 @@ class RedirectAPIView(viewsets.ViewSet):
             tasks.generate_token.delay(
                 calculation.id,
             )
+            # TODO: why serializer return false token...
             response_serilizer = UrlSerializer(calculation)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
