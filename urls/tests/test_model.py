@@ -5,13 +5,11 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 
+from utils.tests import CustomTestCase
 from urls.models import Url
 from string import ascii_letters, digits
 
-
 AVAILABLE_CHARS = ascii_letters + digits
-
-from utils.tests import CustomTestCase
 
 
 class TestUrlModel(CustomTestCase):
