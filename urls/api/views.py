@@ -4,10 +4,10 @@ from django.utils.timezone import now
 from rest_framework.exceptions import NotFound
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from urls.models import Url, UrlUsage
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema,OpenApiParameter
 from django.contrib.auth.models import User
 from urls import tasks
 from rest_framework.response import Response
@@ -19,6 +19,7 @@ from .serializers import (
     UrlSerializerCreate,
 )
 from django import shortcuts
+from django.http import HttpResponseRedirect
 
 
 class UserView(viewsets.ViewSet):
@@ -106,9 +107,28 @@ class RedirectAPIView(viewsets.ViewSet):
     #     )
     #     return HttpResponseRedirect(redirect_to=url_obj.url)
 
+
+    @extend_schema(
+    parameters=[
+        OpenApiParameter(name="token", description="url's token ", required=True, type=str)
+    ],
+    responses={302: None},  # 302: Redirect response
+)
     @action(detail=False, methods=["get"])
-    def sut_gp(self, request):
-        pass
+    def redirect_view(self, request):
+        token = request.query_params.get("token")
+        if token:
+            try:
+                redirect_info = Url.objects.get(token=token)
+                redirect_url = redirect_info.url
+                return HttpResponseRedirect(redirect_url)
+            except redirect_info.DoesNotExist:
+                return Response(
+                    {"error": "No matching URL for this token"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response({"error": "token is required"})
 
     @extend_schema(
         request=UrlSerializerCreate,
@@ -126,7 +146,7 @@ class RedirectAPIView(viewsets.ViewSet):
                 calculation.id,
             )
             response_serilizer = UrlSerializer(calculation)
-            return Response(response_serilizer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):

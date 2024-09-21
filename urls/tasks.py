@@ -28,7 +28,7 @@ def generate_token(url_id):
     )
     url = Url.objects.get(pk=url_id)
     url.token = generated_token
-    new_url = settings.URL_SHORTENER_BASE_URL + url.token
+    new_url = settings.URL_SHORTENER_BASE_URL +'?'+'token'+ '=' + url.token
     url.new_url = new_url
     url.save()
 
@@ -51,7 +51,3 @@ def delete_short_url(url_id):
     url.delete()
     
 
-
-@shared_task()
-def delete_short_irl_with_long(long_url):
-    pass
