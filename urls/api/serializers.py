@@ -1,4 +1,4 @@
-from urls.models import Url, UrlUsage, UrlUser
+from urls.models import Url, UrlUsage
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
@@ -13,11 +13,6 @@ class UrlSerializerCreate(serializers.ModelSerializer):
         model = Url
         fields = ["url"]
 
-
-class UrlUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UrlUser
-        fields = "__all__"
 
 
 class UrlUsageSerializer(serializers.ModelSerializer):

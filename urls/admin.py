@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UrlUsage, UrlUser
+from .models import UrlUsage
 from urls.models import Url
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -32,10 +32,6 @@ class UrlAdmin(admin.ModelAdmin):
     is_active.boolean = True
 
 
-@admin.register(UrlUser)
-class UrlUserAdmin(admin.ModelAdmin):
-    fields = ("url", "user")
-    list_display = ("url", "user")
 
 
 admin.site.register(UrlUsage)

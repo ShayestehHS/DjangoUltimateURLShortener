@@ -6,7 +6,7 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from urls.models import Url, UrlUser, UrlUsage
+from urls.models import Url,  UrlUsage
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth.models import User
 from urls import tasks
@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from .serializers import (
     UrlSerializer,
     UrlUsageSerializer,
-    UrlUserSerializer,
     UserCreateSerializer,
     UserEditSerializer,
     UrlSerializerCreate,
@@ -77,7 +76,7 @@ class UserView(viewsets.ViewSet):
     def return_all_url_for_one_user(self, request, pk):
         data = self.get_queryset()
         user = shortcuts.get_object_or_404(data, pk=pk)
-        urls = UrlUser.objects.filter(user=user)
+        urls = UrlSerializer.objects.filter(user=user)
         serializer = UrlSerializer(urls, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -116,20 +115,6 @@ class RedirectAPIView(viewsets.ViewSet):
     def short_url_to_general_page(self, short_url):
         pass
 
-    @extend_schema(
-        request=UrlUserSerializer,
-        responses={201: UrlUserSerializer},
-        description="Endpoint for creating a URL user entry",
-    )
-    def create(self, request):
-        serializer = UrlUserSerializer(data=request.data)
-        # long_url = request.data.get("long_url")
-        # user = request.data.get("user_id")
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
         request=UrlSerializerCreate,
@@ -140,6 +125,7 @@ class RedirectAPIView(viewsets.ViewSet):
     def generate_token(self, request):
         serializer = UrlSerializerCreate(data=request.data)
         if serializer.is_valid():
+            
             calculation = serializer.save()
             tasks.generate_token.delay(
                 calculation.id,

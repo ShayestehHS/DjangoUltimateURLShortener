@@ -25,6 +25,7 @@ def get_default_expiration_date():
 
 
 class Url(TimeStampModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="username")
     url = models.URLField(max_length=255, validators=[is_https], null=True, blank=True)
     token = models.CharField(max_length=MAXIMUM_URL_CHARS, editable=False,null=True,blank=True,unique=True)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
@@ -80,12 +81,6 @@ class Url(TimeStampModel):
         ]
 
 
-class UrlUser(models.Model):
-    url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="url_users")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="username")
-
-    def __str__(self):
-        return str(self.user)
 
 
 class UrlUsage(TimeStampModel):
