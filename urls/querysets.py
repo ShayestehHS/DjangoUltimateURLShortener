@@ -7,7 +7,6 @@ from django.utils.timezone import now
 
 READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 
-
 class UrlQuerySet(models.QuerySet):
     def all_actives(self):
         return self.filter(expiration_date__gte=now())

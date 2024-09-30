@@ -3,7 +3,7 @@ from datetime import datetime
 from celery import shared_task
 from django.conf import settings
 
-from urls.models import Url, UrlUsage
+from urls.models import Url, UrlClick
 
 
 @shared_task
@@ -19,4 +19,5 @@ def create_ready_to_set_token_periodically():
 @shared_task()
 def log_the_url_usages(url_id, created_at):
     # ToDo: Use bulk create instead
-    UrlUsage.objects.create(url_id=url_id, created_at=datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z',))
+    # UrlClick.objects.create(url_id=url_id, created_at=datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z',))
+    pass
