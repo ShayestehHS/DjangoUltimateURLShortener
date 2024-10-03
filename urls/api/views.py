@@ -73,8 +73,6 @@ class RedirectAPIView(APIView):
 
 class ReturnAvailableToken(APIView):
 
-
-
     def get(self, *args, **kwargs):
         available_token = list(
             Url.token.filter(url=READY_TO_SET_TOKEN_URL).values_list("token", flat=True)
