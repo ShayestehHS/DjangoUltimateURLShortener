@@ -1,12 +1,15 @@
+from typing import Any
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import F, ExpressionWrapper, DurationField
 from django.db.models.functions import Now
-from django.http import HttpResponseRedirect
+from django.http import HttpRequest, HttpResponseRedirect
 from django.utils.timezone import now
+from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
-
+from urls.models import READY_TO_SET_TOKEN_URL
 from urls.models import Url
+from rest_framework import response, status
 from urls.tasks import log_the_url_usages
 
 USE_CELERY_AS_USAGE_LOGGER = settings.URL_SHORTENER_USE_CELERY_AS_USAGE_LOGGER
@@ -35,7 +38,11 @@ class RedirectAPIView(APIView):
             redirect_url = url_obj.url
             url_pk = url_obj.pk
             if USE_CACHE:
-                cache.set(token, f"{redirect_url}{URL_PK_SEPERATOR}{url_pk}", url_obj.remaining_seconds.seconds)
+                cache.set(
+                    token,
+                    f"{redirect_url}{URL_PK_SEPERATOR}{url_pk}",
+                    url_obj.remaining_seconds.seconds,
+                )
 
         self.log_the_url_usages(url_pk)
         return HttpResponseRedirect(redirect_to=redirect_url)
@@ -49,13 +56,12 @@ class RedirectAPIView(APIView):
 
     def get_object(self, token):
         return (
-            Url.objects
-            .filter(token=token)
+            Url.objects.filter(token=token)
             .exclude_ready_to_set_urls()
             .all_actives()
             .annotate(
                 remaining_seconds=ExpressionWrapper(
-                    F('expiration_date') - Now(),
+                    F("expiration_date") - Now(),
                     output_field=DurationField(),
                 )
             )
@@ -63,3 +69,33 @@ class RedirectAPIView(APIView):
             .order_by()
             .first()
         )
+
+
+class ReturnAvailableToken(APIView):
+
+    available_token = list(
+        Url.objects.filter(url=READY_TO_SET_TOKEN_URL).value_list("token", flat=True)
+    )
+
+    def get(self, *args, **kwargs):
+        available_token = list(
+            Url.token.filter(url=READY_TO_SET_TOKEN_URL).value_list("token", flat=True)
+        )
+
+        while len(available_token) < 4:
+            try:
+                new_token = Url.create_token()
+                Url.objects.create(url=READY_TO_SET_TOKEN_URL, token=new_token)
+                available_token.append(new_token)
+            except ValidationError as e:
+                return response.Response(
+                    {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return response.Response(
+                    {"error": "failed to generate new token"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+            return response.Response(
+                {"available_tokens": available_token[:4]}, status=status.HTTP_200_OK
+            )
