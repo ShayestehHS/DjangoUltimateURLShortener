@@ -54,3 +54,9 @@ class UrlManager(models.Manager):
 
     def all_ready_to_set_token(self):
         return super().all().filter(url=READY_TO_SET_TOKEN_URL).order_by()
+
+    def get_or_create_ready_to_set_token(self):
+        ready_to_set_token = self.all_ready_to_set_token().first()
+        if ready_to_set_token:
+            return ready_to_set_token
+        return self.create_ready_to_set_token()
