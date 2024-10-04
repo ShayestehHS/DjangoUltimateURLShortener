@@ -68,6 +68,8 @@ class Url(TimeStampModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
+        if self.url == settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL:
+            return "READY_TO_SET_TOKEN_URL"
         return str(self.url).replace("https://", "")
 
     class Meta:
