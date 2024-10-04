@@ -29,7 +29,7 @@ class Url(TimeStampModel):
     url = models.URLField(max_length=MAXIMUM_URL_LENGTH, validators=[is_https])
     token = models.CharField(max_length=MAXIMUM_TOKEN_LENGTH)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
 
     objects = UrlManager()
 
