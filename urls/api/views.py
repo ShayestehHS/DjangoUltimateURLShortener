@@ -11,9 +11,7 @@ from urls.tasks import log_the_url_usages
 
 USE_CELERY_AS_USAGE_LOGGER = settings.URL_SHORTENER_USE_CELERY_AS_USAGE_LOGGER
 MAXIMUM_TOKEN_LENGTH = settings.URL_SHORTENER_MAXIMUM_TOKEN_LENGTH
-URL_PK_SEPERATOR = settings.URL_SHORTENER_URL_PK_SEPERATOR
 USE_CACHE = settings.URL_SHORTENER_USE_CACHE
-
 
 class RedirectAPIView(APIView):
     authorization_classes = []
@@ -24,9 +22,8 @@ class RedirectAPIView(APIView):
             return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
 
         if USE_CACHE and (cached_value := cache.get(token)):
-            split_list = cached_value.split(URL_PK_SEPERATOR)
-            redirect_url = split_list[0]
-            url_pk = split_list[-1]
+            redirect_url = cached_value["redirect_url"]
+            url_pk = cached_value["url_pk"]
         else:
             url_obj = self.get_object(token)
             if not url_obj:
@@ -34,8 +31,12 @@ class RedirectAPIView(APIView):
 
             redirect_url = url_obj.url
             url_pk = url_obj.pk
-            if USE_CACHE:
-                cache.set(token, f"{redirect_url}{URL_PK_SEPERATOR}{url_pk}", url_obj.remaining_seconds.seconds)
+            if settings.URL_SHORTENER_USE_CACHE:
+                data = {
+                    "redirect_url": redirect_url,
+                    "url_pk": url_pk
+                }
+                cache.set(token, data, url_obj.remaining_seconds)
 
         self.log_the_url_usages(url_pk)
         return HttpResponseRedirect(redirect_to=redirect_url)
