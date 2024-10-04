@@ -59,6 +59,12 @@ class UrlAdmin(admin.ModelAdmin):
 
         Url.objects.create(**form.cleaned_data)
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'token':
+            formfield.initial = Url.objects.get_or_create_ready_to_set_token().token
+        return formfield
+
 
 @admin.register(UrlUsage)
 class UrlUsageAdmin(admin.ModelAdmin):
