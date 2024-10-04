@@ -27,7 +27,7 @@ def get_default_expiration_date():
 
 class Url(TimeStampModel):
     url = models.URLField(max_length=255, validators=[is_https])
-    token = models.CharField(max_length=MAXIMUM_URL_LENGTH)
+    token = models.CharField(max_length=MAXIMUM_TOKEN_LENGTH)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
 
     objects = UrlManager()
