@@ -11,10 +11,6 @@ class UrlAdminForm(ModelForm):
         model = Url
         fields = ("url", "token", "expiration_date")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['token'].required = False
-
     def clean_token(self):
         token = self.cleaned_data.get("token")
         if token and (Url.objects
@@ -54,6 +50,13 @@ class UrlAdmin(admin.ModelAdmin):
         return True
 
     def save_model(self, request, obj, form, change):
+        token = form.cleaned_data["token"]
+        ready_to_set_token = Url.objects.all_ready_to_set_token().filter(token=token).first()
+        if ready_to_set_token:
+            ready_to_set_token.url = form.cleaned_data["url"]
+            ready_to_set_token.save(update_fields=["url"])
+            return
+
         Url.objects.create(**form.cleaned_data)
 
 
