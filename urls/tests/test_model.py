@@ -161,3 +161,22 @@ class TestUrlModel(CustomTestCase):
 
         with self.assertRaises(Url.DoesNotExist):
             Url.objects.get(token=test_code.upper())
+
+    def test_get_or_create_ready_to_set_token_without_any_ready_to_set_token(self):
+        self.assertFalse(Url.objects.all_ready_to_set_token().exists())
+
+        with self.assertNumQueries(3):
+            url = Url.objects.get_or_create_ready_to_set_token()
+
+        self.assertEqual(url.url, settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL)
+        self.assertTrue(Url.objects.all_actives().filter(token=url.token).exists())
+        self.assertTrue(Url.objects.all_ready_to_set_token().filter(token=url.token).exists())
+
+    def test_get_or_create_ready_to_set_token_with_exists_ready_to_set_token(self):
+        url = Url.objects.create_ready_to_set_token()
+        self.assertTrue(Url.objects.all_ready_to_set_token().count(), 1)
+
+        with self.assertNumQueries(1):
+            created_url = Url.objects.get_or_create_ready_to_set_token()
+
+        self.assertEqual(url, created_url)
