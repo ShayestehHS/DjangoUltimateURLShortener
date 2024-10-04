@@ -48,18 +48,19 @@ class RedirectAPIView(APIView):
             log_the_url_usages(*usage_log_args)
 
     def get_object(self, token):
-        return (
+        queryset = (
             Url.objects
             .filter(token=token)
             .exclude_ready_to_set_urls()
             .all_actives()
-            .annotate(
+            .only("url")
+            .order_by()
+        )
+        if USE_CACHE:
+            queryset = queryset.annotate(
                 remaining_seconds=ExpressionWrapper(
                     F('expiration_date') - Now(),
                     output_field=DurationField(),
                 )
             )
-            .only("url")
-            .order_by()
-            .first()
-        )
+        return queryset.first()
