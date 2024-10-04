@@ -11,7 +11,7 @@ from urls.tasks import log_the_url_usages
 
 USE_CELERY_AS_USAGE_LOGGER = settings.URL_SHORTENER_USE_CELERY_AS_USAGE_LOGGER
 MAXIMUM_TOKEN_LENGTH = settings.URL_SHORTENER_MAXIMUM_TOKEN_LENGTH
-USE_CACHE = settings.URL_SHORTENER_USE_CACHE
+
 
 class RedirectAPIView(APIView):
     authorization_classes = []
@@ -21,7 +21,7 @@ class RedirectAPIView(APIView):
         if len(token) != MAXIMUM_TOKEN_LENGTH:
             return HttpResponseRedirect(redirect_to=settings.URL_SHORTENER_404_PAGE)
 
-        if USE_CACHE and (cached_value := cache.get(token)):
+        if settings.URL_SHORTENER_USE_CACHE and (cached_value := cache.get(token)):
             redirect_url = cached_value["redirect_url"]
             url_pk = cached_value["url_pk"]
         else:
@@ -57,7 +57,7 @@ class RedirectAPIView(APIView):
             .only("url")
             .order_by()
         )
-        if USE_CACHE:
+        if settings.URL_SHORTENER_USE_CACHE:
             queryset = queryset.annotate(
                 remaining_seconds=ExpressionWrapper(
                     F('expiration_date') - Now(),
