@@ -9,3 +9,6 @@ urlpatterns = [
         "availabletoken/", views.ReturnAvailableToken.as_view(), name="availabletoken"
     ),
 ]
+
+
+
