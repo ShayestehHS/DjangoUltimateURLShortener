@@ -72,22 +72,21 @@ class RedirectAPIView(APIView):
 
 
 class ReturnAvailableToken(APIView):
-
+    queryset = Url.objects.all()
     def get(self, *args, **kwargs):
         available_token = list(
-            Url.objects.all_actives(url=READY_TO_SET_TOKEN_URL)
+            self.queryset.all_actives(url=READY_TO_SET_TOKEN_URL)
             .values_list("token", flat=True)
         )
 
         while len(available_token) < 4:
             try:
-                ready_to_set_token = Url.objects.all_ready_to_set_token().first()
+                ready_to_set_token = self.queryset.all_ready_to_set_token().first()
                 if ready_to_set_token:
                     available_token.append(ready_to_set_token.token)
                 else:
-                    new_token = Url.create_token()
-                    Url.objects.create_ready_to_set_token(url=READY_TO_SET_TOKEN_URL, token=new_token)
-                    available_token.append(new_token)
+                    new_token_instance=self.queryset.create_ready_to_set_token()
+                    available_token.append(new_token_instance.token)
             except ValidationError as e:
                 return response.Response(
                     {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
@@ -97,6 +96,6 @@ class ReturnAvailableToken(APIView):
                     {"error": "failed to generate new token"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
-            return response.Response(
+        return response.Response(
                 {"available_tokens": available_token[:4]}, status=status.HTTP_200_OK
             )
