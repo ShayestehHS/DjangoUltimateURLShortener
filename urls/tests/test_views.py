@@ -8,7 +8,6 @@ from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-
 from urls.models import Url, AVAILABLE_CHARS
 from urls.api.views import ReturnAvailableToken
 from django.core.exceptions import ValidationError
@@ -19,7 +18,6 @@ from django.urls import reverse
 from django.test import override_settings
 from django.conf import settings
 
-READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 
 
 def get_redirect_url(token):
