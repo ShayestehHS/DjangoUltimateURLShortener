@@ -75,14 +75,19 @@ class ReturnAvailableToken(APIView):
 
     def get(self, *args, **kwargs):
         available_token = list(
-            Url.token.filter(url=READY_TO_SET_TOKEN_URL).values_list("token", flat=True)
+            Url.objects.all_actives(url=READY_TO_SET_TOKEN_URL)
+            .values_list("token", flat=True)
         )
 
         while len(available_token) < 4:
             try:
-                new_token = Url.create_token()
-                Url.objects.create(url=READY_TO_SET_TOKEN_URL, token=new_token)
-                available_token.append(new_token)
+                ready_to_set_token = Url.objects.all_ready_to_set_token().first()
+                if ready_to_set_token:
+                    available_token.append(ready_to_set_token.token)
+                else:
+                    new_token = Url.create_token()
+                    Url.objects.create_ready_to_set_token(url=READY_TO_SET_TOKEN_URL, token=new_token)
+                    available_token.append(new_token)
             except ValidationError as e:
                 return response.Response(
                     {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST

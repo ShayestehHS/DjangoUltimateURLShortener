@@ -194,7 +194,7 @@ class TestReReturnAvailableTokenturn(CustomTestCase):
     def test_return_only_four_tokens(self, create_token_moke):
         create_token_moke.side_effect = ["token3", "token4", "token5"]
         with self.assertQueryCountRange(1, 2):
-            response = self.client.get(reverse)
+            response = self.client.get(reverse("availabletoken"))
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertIn("available_tokens", response.data)
             self.assertEqual(len(response.data["available_tokens"]), 4)
