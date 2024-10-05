@@ -1,17 +1,7 @@
 from django.test.utils import CaptureQueriesContext
 from django.db import connection
 from django.test import TestCase
-from urls.api.views import ReturnAvailableToken
-from urls.models import Url
-from django.core.exceptions import ValidationError
-from rest_framework import status
-from rest_framework.test import APIClient
-from unittest import mock
-from django.urls import reverse
-from django.test import override_settings
-from django.conf import settings
 
-READY_TO_SET_TOKEN_URL = settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL
 
 
 class CustomTestCase(TestCase):
