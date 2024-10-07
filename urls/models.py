@@ -27,8 +27,8 @@ def get_default_expiration_date():
 
 
 class Url(TimeStampModel):
-    url = models.URLField(max_length=255, validators=[is_https])
-    token = models.CharField(max_length=MAXIMUM_URL_LENGTH)
+    url = models.URLField(max_length=MAXIMUM_URL_LENGTH, validators=[is_https])
+    token = models.CharField(max_length=MAXIMUM_TOKEN_LENGTH)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
 
     objects = UrlManager()
@@ -69,6 +69,8 @@ class Url(TimeStampModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
+        if self.url == settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL:
+            return "READY_TO_SET_TOKEN_URL"
         return str(self.url).replace("https://", "")
 
     class Meta:

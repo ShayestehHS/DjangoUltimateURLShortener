@@ -57,17 +57,25 @@ class UrlAdmin(admin.ModelAdmin):
         return True
 
     def save_model(self, request, obj, form, change):
+        token = form.cleaned_data["token"]
+        ready_to_set_token = Url.objects.all_ready_to_set_token().filter(token=token).first()
+        if ready_to_set_token:
+            ready_to_set_token.url = form.cleaned_data["url"]
+            ready_to_set_token.save(update_fields=["url"])
+            return
+
         Url.objects.create(**form.cleaned_data)
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'token':
+            formfield.initial = Url.objects.get_or_create_ready_to_set_token().token
+        return formfield
 
 
 @admin.register(UrlClick)
 class UrlUsageAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "url",
-        "get_token",
-        "created_at",
-    )
+    list_display = ("id", "url", "get_token", "created_at",)
     ordering = ("-id",)
 
     def get_queryset(self, request):
@@ -76,4 +84,4 @@ class UrlUsageAdmin(admin.ModelAdmin):
     def get_token(self, obj: UrlClick):
         return obj.url.token
 
-    get_token.short_description = "Token"
+    get_token.short_description = 'Token'
