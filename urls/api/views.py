@@ -9,7 +9,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from urls.models import READY_TO_SET_TOKEN_URL
 from urls.models import Url
-from rest_framework import response, status
+from rest_framework import status
+from rest_framework.response import Response
 from urls.tasks import log_the_url_usages
 
 USE_CELERY_AS_USAGE_LOGGER = settings.URL_SHORTENER_USE_CELERY_AS_USAGE_LOGGER
@@ -35,10 +36,7 @@ class RedirectAPIView(APIView):
             redirect_url = url_obj.url
             url_pk = url_obj.pk
             if settings.URL_SHORTENER_USE_CACHE:
-                data = {
-                    "redirect_url": redirect_url,
-                    "url_pk": url_pk
-                }
+                data = {"redirect_url": redirect_url, "url_pk": url_pk}
                 cache.set(token, data, url_obj.remaining_seconds)
 
         self.log_the_url_usages(url_pk)
@@ -53,8 +51,7 @@ class RedirectAPIView(APIView):
 
     def get_object(self, token):
         queryset = (
-            Url.objects
-            .filter(token=token)
+            Url.objects.filter(token=token)
             .exclude_ready_to_set_urls()
             .all_actives()
             .only("url")
@@ -68,3 +65,19 @@ class RedirectAPIView(APIView):
                 )
             )
         return queryset.first()
+
+
+class ReturnAvailableToken(APIView):
+
+    def get(self, *args, **kwargs):
+        attempts = 0
+        max_attempts = 10
+        available_tokens = list(
+            Url.objects.all_actives().values_list("token", flat=True)[:4]
+        )
+        while len(available_tokens) < 4 and attempts < max_attempts:
+            new_url = Url.objects.create_ready_to_set_token()
+            available_tokens.append(new_url.token)
+            attempts += 1
+
+        return Response(list(available_tokens), status=status.HTTP_200_OK)
