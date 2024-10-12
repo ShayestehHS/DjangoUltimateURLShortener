@@ -1,0 +1,7 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hook:
+      - id: black
+        language_version: python3.11.5
+        args: []

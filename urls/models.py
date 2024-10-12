@@ -1,5 +1,6 @@
 from datetime import timedelta
 from random import choice
+from typing import Iterable
 
 from django.conf import settings
 from django.contrib.postgres.indexes import HashIndex
@@ -74,23 +75,28 @@ class Url(TimeStampModel):
 
     class Meta:
         indexes = [
-            models.Index(fields=['url'], name='ready_to_set_token_urls', condition=models.Q(url=READY_TO_SET_TOKEN_URL)),
-            HashIndex(fields=["token"])
+            models.Index(
+                fields=["url"],
+                name="ready_to_set_token_urls",
+                condition=models.Q(url=READY_TO_SET_TOKEN_URL),
+            ),
+            HashIndex(fields=["token"]),
         ]
 
 
-class UrlUser(models.Model):
-    url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="url_users")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="username")
-
-    def __str__(self):
-        return str(self.user)
-
-
-class UrlUsage(TimeStampModel):
-    url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="usages")
-    updated_at = None
+class UrlClick(models.Model):
+    url = models.ForeignKey("Url", on_delete=models.CASCADE, related_name="click")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user_click", null=True, blank=True
+    )
+    created_at = models.DateField(
+        auto_now_add=True,
+    )
+    update_at = models.DateField(auto_now=True)
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return str(self.user)

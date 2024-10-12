@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
 
-from urls.models import Url, UrlUsage
+from urls.models import Url, UrlClick
 
 
 class UrlAdminForm(ModelForm):
@@ -11,13 +11,18 @@ class UrlAdminForm(ModelForm):
         model = Url
         fields = ("url", "token", "expiration_date")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["token"].required = False
+
     def clean_token(self):
         token = self.cleaned_data.get("token")
-        if token and (Url.objects
-                .all_actives()
-                .exclude_ready_to_set_urls()
-                .filter(token=token)
-                .exists()):
+        if token and (
+            Url.objects.all_actives()
+            .exclude_ready_to_set_urls()
+            .filter(token=token)
+            .exists()
+        ):
             raise ValidationError("This token is active.")
         return token
 
@@ -26,7 +31,9 @@ class UrlAdminForm(ModelForm):
         if url.startswith("http://"):
             raise ValidationError("You can not use insecure URL.")
         if url == settings.URL_SHORTENER_READY_TO_SET_TOKEN_URL:
-            raise ValidationError("You can not use this url because it is a reserved url.")
+            raise ValidationError(
+                "You can not use this url because it is a reserved url."
+            )
         return url
 
 
@@ -41,7 +48,7 @@ class UrlAdmin(admin.ModelAdmin):
     def is_active(self, obj):
         return obj.is_active
 
-    is_active.short_description = 'Is Active'
+    is_active.short_description = "Is Active"
     is_active.boolean = True
 
     def has_change_permission(self, request, obj=None):
@@ -66,7 +73,7 @@ class UrlAdmin(admin.ModelAdmin):
         return formfield
 
 
-@admin.register(UrlUsage)
+@admin.register(UrlClick)
 class UrlUsageAdmin(admin.ModelAdmin):
     list_display = ("id", "url", "get_token", "created_at",)
     ordering = ("-id",)
@@ -74,7 +81,7 @@ class UrlUsageAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("url")
 
-    def get_token(self, obj: UrlUsage):
+    def get_token(self, obj: UrlClick):
         return obj.url.token
 
     get_token.short_description = 'Token'

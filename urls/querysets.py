@@ -32,16 +32,18 @@ class UrlManager(models.Manager):
             raise ValidationError("You can not use ready_to_set_token_url")
 
         if suggested_token := kwargs.pop("token", None):
-            if (self.get_queryset()
-                    .filter(token=suggested_token)
-                    .filter(Q(url=READY_TO_SET_TOKEN_URL) | Q(expiration_date__gte=now()))
-                    .exists()):
+            if (
+                self.get_queryset()
+                .filter(token=suggested_token)
+                .filter(Q(url=READY_TO_SET_TOKEN_URL) | Q(expiration_date__gte=now()))
+                .exists()
+            ):
                 raise ValidationError("This token is already active.")
             return super().create(url=url, token=suggested_token, **kwargs)
 
         if ready_to_set_token_obj := self.all_ready_to_set_token().first():
             ready_to_set_token_obj.url = url
-            ready_to_set_token_obj.expiration_date = kwargs.get('expiration_date', None)
+            ready_to_set_token_obj.expiration_date = kwargs.get("expiration_date", None)
             ready_to_set_token_obj.created_at = now()
             ready_to_set_token_obj.save()
             return ready_to_set_token_obj
@@ -50,7 +52,9 @@ class UrlManager(models.Manager):
         return super().create(url=url, token=token, **kwargs)
 
     def create_ready_to_set_token(self):
-        return super().create(url=READY_TO_SET_TOKEN_URL, token=self.model.create_token())
+        return super().create(
+            url=READY_TO_SET_TOKEN_URL, token=self.model.create_token()
+        )
 
     def all_ready_to_set_token(self):
         return super().all().filter(url=READY_TO_SET_TOKEN_URL).order_by()

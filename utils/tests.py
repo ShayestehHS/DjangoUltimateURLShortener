@@ -3,6 +3,7 @@ from django.db import connection
 from django.test import TestCase
 
 
+
 class CustomTestCase(TestCase):
     def assertMinimumNumQueries(self, min_queries):
         """
@@ -39,7 +40,8 @@ class _AssertMinimumNumQueries:
         self.test_case.assertGreaterEqual(
             executed_queries,
             self.min_queries,
-            "%d queries executed, at least %d expected\nCaptured queries were:\n%s" % (
+            "%d queries executed, at least %d expected\nCaptured queries were:\n%s"
+            % (
                 executed_queries,
                 self.min_queries,
                 "\n".join(
@@ -66,7 +68,8 @@ class _AssertMaximumNumQueries:
         self.test_case.assertLessEqual(
             executed_queries,
             self.max_queries,
-            "%d queries executed, at most %d expected\nCaptured queries were:\n%s" % (
+            "%d queries executed, at most %d expected\nCaptured queries were:\n%s"
+            % (
                 executed_queries,
                 self.max_queries,
                 "\n".join(
@@ -94,7 +97,8 @@ class _AssertQueryCountRange:
         self.test_case.assertGreaterEqual(
             executed_queries,
             self.min_queries,
-            "%d queries executed, at least %d expected\nCaptured queries were:\n%s" % (
+            "%d queries executed, at least %d expected\nCaptured queries were:\n%s"
+            % (
                 executed_queries,
                 self.min_queries,
                 "\n".join(
@@ -106,7 +110,8 @@ class _AssertQueryCountRange:
         self.test_case.assertLessEqual(
             executed_queries,
             self.max_queries,
-            "%d queries executed, at most %d expected\nCaptured queries were:\n%s" % (
+            "%d queries executed, at most %d expected\nCaptured queries were:\n%s"
+            % (
                 executed_queries,
                 self.max_queries,
                 "\n".join(

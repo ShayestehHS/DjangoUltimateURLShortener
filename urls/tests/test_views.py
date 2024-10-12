@@ -1,15 +1,23 @@
 from datetime import timedelta
 from random import choice
 from unittest.mock import patch
-
+from django.db import connection
 from django.conf import settings
 from django.test.utils import override_settings
 from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-
 from urls.models import Url, AVAILABLE_CHARS
+from urls.api.views import ReturnAvailableToken
+from django.core.exceptions import ValidationError
+from rest_framework import status
+from rest_framework.test import APIClient
+from unittest import mock
+from django.urls import reverse
+from django.test import override_settings
+from django.conf import settings
+
 
 
 def get_redirect_url(token):
@@ -40,7 +48,9 @@ class TestRedirectUrlView(APITestCase):
     @patch("urls.api.views.cache.set")
     @override_settings(URL_SHORTENER_USE_CACHE=True)
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
-    def test_redirect_view_with_valid_cached_key_redirect_to_correct_url(self, mock_cache_set, mock_cache_get, mock_log_the_url_usages):
+    def test_redirect_view_with_valid_cached_key_redirect_to_correct_url(
+        self, mock_cache_set, mock_cache_get, mock_log_the_url_usages
+    ):
         url_obj = Url.objects.create(url="https://example.com")
         mock_cache_get.return_value = {
             "redirect_url": url_obj.url,
@@ -78,7 +88,9 @@ class TestRedirectUrlView(APITestCase):
             "url_pk": url_obj.pk
         }
         mock_cache_get.assert_called_once_with(token)
-        mock_cache_set.assert_called_once_with(token, cache_value, url_obj.remaining_seconds)
+        mock_cache_set.assert_called_once_with(
+            token, cache_value, url_obj.remaining_seconds
+        )
 
     @patch("urls.api.views.cache.get")
     @patch("urls.api.views.cache.set")
@@ -153,3 +165,85 @@ class TestRedirectUrlView(APITestCase):
 
         mock_cache_get.assert_not_called()
         mock_cache_set.assert_not_called()
+
+
+class TestReturnAvailableToken(APITestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        Url.objects.create_ready_to_set_token()
+        Url.objects.create_ready_to_set_token()
+
+    @mock.patch("urls.api.views.Url.create_token")
+    def test_available_tokens_insufficient(self, create_token_mock):
+        create_token_mock.side_effect = ["token3", "token4"]
+
+        query_count = len(connection.queries)
+
+        with self.assertGreaterEqual(query_count, 3) and self.assertLessEqual(
+            query_count, 5
+        ):
+            response = self.client.get(reverse("availabletoken"))
+            self.assertEqual(create_token_mock.call_count, 2)
+            self.assertIn("available_tokens", response.data)
+            self.assertEqual(len(response.data["available_tokens"]), 4)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(create_token_mock.call_count, 2)
+
+    @mock.patch("urls.api.views.Url.create_token")
+    def test_available_tokens_insufficient_no_creation(self, create_token_mock):
+        Url.objects.create_ready_to_set_token()
+        Url.objects.create_ready_to_set_token()
+        query_count = len(connection.queries)
+
+        with self.assertGreaterEqual(query_count, 1) and self.assertLessEqual(
+            query_count, 2
+        ):
+            response = self.client.get(reverse("availabletoken"))
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data["available_token"]), 4)
+            self.assertIn("available_tokens", response.data)
+            create_token_mock.assert_not_called()
+
+    @mock.patch("urls.api.views.Url.create_token")
+    def test_create_token_validation_error(self, create_token_mock):
+        create_token_mock.side_effect = ValidationError("Invalid token")
+        query_count = len(connection.queries)
+
+        with self.assertGreaterEqual(query_count, 1) and self.assertLessEqual(
+            query_count, 2
+        ):
+            response = self.client.get(reverse("availabletoken"))
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("error", response.data)
+            self.assertEqual(response.data["error"], "Invalid token")
+            create_token_mock.assert_called_once()
+
+    @mock.patch("urls.api.views.Url.create_token")
+    def test_create_token_general_exception(self, create_token_mok):
+        create_token_mok.side_effect = Exception("Unexpected error")
+        query_count = len(connection.queries)
+
+        with self.assertGreaterEqual(query_count, 1) and self.assertLessEqual(
+            query_count, 2
+        ):
+            response = self.client.get(reverse("availabletoken"))
+            self.assertIn("error", response.data)
+            self.assertEqual(response.data["error"], "failed to generate new token")
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            create_token_mok.assert_called_once()
+
+    @mock.patch("urls.api.views.Url.create_token")
+    def test_return_only_four_tokens(self, create_token_moke):
+        create_token_moke.side_effect = ["token3", "token4", "token5"]
+        query_count = len(connection.queries)
+
+        with self.assertGreaterEqual(query_count, 1) and self.assertLessEqual(
+            query_count, 2
+        ):
+            response = self.client.get(reverse("availabletoken"))
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertIn("available_tokens", response.data)
+            self.assertEqual(len(response.data["available_tokens"]), 4)
+            self.assertEqual(create_token_moke.call_count, 2)
