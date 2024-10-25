@@ -3,17 +3,17 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
 
-from urls.models import Url, UrlUsage
+from urls.models import URL, UrlUsage
 
 
 class UrlAdminForm(ModelForm):
     class Meta:
-        model = Url
+        model = URL
         fields = ("url", "token", "expiration_date")
 
     def clean_token(self):
         token = self.cleaned_data.get("token")
-        if token and (Url.objects
+        if token and (URL.objects
                 .all_actives()
                 .exclude_ready_to_set_urls()
                 .filter(token=token)
@@ -30,7 +30,7 @@ class UrlAdminForm(ModelForm):
         return url
 
 
-@admin.register(Url)
+@admin.register(URL)
 class UrlAdmin(admin.ModelAdmin):
     form = UrlAdminForm
     list_display = ("__str__", "token", "created_at", "is_active")
@@ -51,18 +51,18 @@ class UrlAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         token = form.cleaned_data["token"]
-        ready_to_set_token = Url.objects.all_ready_to_set_token().filter(token=token).first()
+        ready_to_set_token = URL.objects.all_ready_to_set_token().filter(token=token).first()
         if ready_to_set_token:
             ready_to_set_token.url = form.cleaned_data["url"]
             ready_to_set_token.save(update_fields=["url"])
             return
 
-        Url.objects.create(**form.cleaned_data)
+        URL.objects.create(**form.cleaned_data)
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == 'token':
-            formfield.initial = Url.objects.get_or_create_ready_to_set_token().token
+            formfield.initial = URL.objects.get_or_create_ready_to_set_token().token
         return formfield
 
 

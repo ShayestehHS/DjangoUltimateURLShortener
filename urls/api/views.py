@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.utils.timezone import now
 from rest_framework.views import APIView
 
-from urls.models import Url
+from urls.models import URL
 from urls.tasks import log_the_url_usages
 
 USE_CELERY_AS_USAGE_LOGGER = settings.URL_SHORTENER_USE_CELERY_AS_USAGE_LOGGER
@@ -50,7 +50,7 @@ class RedirectAPIView(APIView):
 
     def get_object(self, token):
         queryset = (
-            Url.objects
+            URL.objects
             .filter(token=token)
             .exclude_ready_to_set_urls()
             .all_actives()

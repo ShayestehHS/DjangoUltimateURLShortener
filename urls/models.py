@@ -8,7 +8,7 @@ from django.db import models
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 from string import ascii_letters, digits
-from urls.querysets import UrlManager
+from urls.querysets import URLManager
 from utils.models import TimeStampModel
 
 BASE_URL = settings.URL_SHORTENER_BASE_URL
@@ -25,7 +25,7 @@ def get_default_expiration_date():
     return now() + timedelta(days=DEFAULT_EXPIRATION_DAYS)
 
 
-class Url(TimeStampModel):
+class URL(TimeStampModel):
     name = models.CharField(max_length=31, unique=True, null=True, blank=True)
     url = models.URLField(
         max_length=MAXIMUM_URL_LENGTH,
@@ -36,7 +36,7 @@ class Url(TimeStampModel):
     token = models.CharField(max_length=MAXIMUM_TOKEN_LENGTH)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
     description = models.TextField(null=True, blank=True)
-    objects = UrlManager()
+    objects = URLManager()
 
     @property
     def short_url(self):
@@ -60,7 +60,7 @@ class Url(TimeStampModel):
         token: str
         for _ in range(MAXIMUM_RECURSION_DEPTH):
             token = cls._create_random_string()
-            if not Url.objects.all_actives().filter(token=token).exists():
+            if not URL.objects.all_actives().filter(token=token).exists():
                 return token
         raise Exception("Maximum recursion depth occurred.")
 
@@ -86,7 +86,7 @@ class Url(TimeStampModel):
 
 
 class UrlUser(models.Model):
-    url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="url_users")
+    url = models.ForeignKey(URL, on_delete=models.CASCADE, related_name="url_users")
     user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="username")
 
     def __str__(self):
@@ -94,7 +94,7 @@ class UrlUser(models.Model):
 
 
 class UrlUsage(TimeStampModel):
-    url = models.ForeignKey(Url, on_delete=models.CASCADE, related_name="usages")
+    url = models.ForeignKey(URL, on_delete=models.CASCADE, related_name="usages")
     updated_at = None
 
     def save(self, *args, **kwargs):

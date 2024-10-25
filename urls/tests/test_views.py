@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
-from urls.models import Url, AVAILABLE_CHARS
+from urls.models import URL, AVAILABLE_CHARS
 
 
 def get_redirect_url(token):
@@ -23,7 +23,7 @@ class TestRedirectUrlView(APITestCase):
     @patch("urls.api.views.cache.set")
     @override_settings(URL_SHORTENER_USE_CACHE=True)
     def test_redirect_view_with_valid_token_redirect_to_correct_url(self, mock_cache_set, mock_cache_get, mock_log_the_url_usages):
-        url = Url.objects.create(url="https://example.com")
+        url = URL.objects.create(url="https://example.com")
         mock_cache_get.return_value = None
 
         with self.assertNumQueries(1):
@@ -41,7 +41,7 @@ class TestRedirectUrlView(APITestCase):
     @override_settings(URL_SHORTENER_USE_CACHE=True)
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
     def test_redirect_view_with_valid_cached_key_redirect_to_correct_url(self, mock_cache_set, mock_cache_get, mock_log_the_url_usages):
-        url_obj = Url.objects.create(url="https://example.com")
+        url_obj = URL.objects.create(url="https://example.com")
         mock_cache_get.return_value = {
             "redirect_url": url_obj.url,
             "url_pk": url_obj.pk
@@ -62,8 +62,8 @@ class TestRedirectUrlView(APITestCase):
     @patch("urls.api.views.cache.set")
     @override_settings(URL_SHORTENER_USE_CACHE=True)
     def test_redirect_view_is_cache_the_token_with_correct_key_value_ttl(self, mock_cache_set, mock_cache_get, mock_get_object, mock_log_the_url_usages):
-        token = Url.create_token()
-        url_obj = Url(pk=0, token=token, url="https://example.com")
+        token = URL.create_token()
+        url_obj = URL(pk=0, token=token, url="https://example.com")
         url_obj.remaining_seconds = 12
         mock_get_object.return_value = url_obj
         mock_cache_get.return_value = None
@@ -84,7 +84,7 @@ class TestRedirectUrlView(APITestCase):
     @patch("urls.api.views.cache.set")
     @override_settings(URL_SHORTENER_USE_CACHE=True)
     def test_redirect_view_with_expired_token_redirect_to_404_page(self, mock_cache_set, mock_cache_get):
-        url = Url.objects.create(url="https://example.com", expiration_date=now() - timedelta(days=1))
+        url = URL.objects.create(url="https://example.com", expiration_date=now() - timedelta(days=1))
         mock_cache_get.return_value = None
 
         with self.assertNumQueries(1):
@@ -99,7 +99,7 @@ class TestRedirectUrlView(APITestCase):
     @patch("urls.api.views.cache.set")
     @override_settings(URL_SHORTENER_USE_CACHE=True)
     def test_redirect_view_with_ready_to_set_token_redirect_to_404_page(self, mock_cache_set, mock_cache_get):
-        url = Url.objects.create_ready_to_set_token()
+        url = URL.objects.create_ready_to_set_token()
         mock_cache_get.return_value = None
 
         with self.assertNumQueries(1):
