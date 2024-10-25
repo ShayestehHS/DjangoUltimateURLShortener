@@ -3,13 +3,13 @@ from random import choice
 
 from django.conf import settings
 from django.contrib.postgres.indexes import HashIndex
+from django.core.validators import URLValidator
 from django.db import models
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 from string import ascii_letters, digits
 from urls.querysets import UrlManager
 from utils.models import TimeStampModel
-from utils.validators import is_https
 
 BASE_URL = settings.URL_SHORTENER_BASE_URL
 MAXIMUM_URL_LENGTH = settings.URL_SHORTENER_MAXIMUM_URL_LENGTH
@@ -26,11 +26,16 @@ def get_default_expiration_date():
 
 
 class Url(TimeStampModel):
-    url = models.URLField(max_length=MAXIMUM_URL_LENGTH, validators=[is_https])
+    name = models.CharField(max_length=31, unique=True, null=True, blank=True)
+    url = models.URLField(
+        max_length=MAXIMUM_URL_LENGTH,
+        validators=[
+            URLValidator(schemes=["https"], message="The URL should start with https://")
+        ]
+    )
     token = models.CharField(max_length=MAXIMUM_TOKEN_LENGTH)
     expiration_date = models.DateTimeField(default=get_default_expiration_date)
     description = models.TextField(null=True, blank=True)
-
     objects = UrlManager()
 
     @property
