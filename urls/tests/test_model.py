@@ -13,6 +13,26 @@ AVAILABLE_CHARS = ascii_letters + digits
 
 
 class TestUrlModel(CustomTestCase):
+    def test_create_two_url_with_none_name_success(self):
+        Url.objects.create(url="https://google.com")
+        Url.objects.create(url="https://google.com")
+
+    def test_create_url_with_duplicate_name_raise_exception(self):
+        Url.objects.create(name='test', url="https://google.com")
+        with self.assertNumQueries(3):
+            with self.assertRaisesMessage(ValidationError, expected_message="Url with this Name already exists."):
+                Url.objects.create(name='test', url="https://google.com")
+
+    def test_get_or_create_with_name_and_url_success(self):
+        with self.assertNumQueries(3):
+            url = Url.objects.all().get_or_create(name='test', url="https://google.com")
+
+        self.assertEqual(url.name, 'test')
+        self.assertEqual(url.url, "https://google.com")
+        self.assertIsNotNone(url.token)
+        self.assertIsNotNone(url.expiration_time, settings.URL_SHORTENER_DEFAULT_EXPIRATION_DAYS)
+        self.assertIsNotNone(url.desciption, None)
+
     def test_create_url_with_same_token_and_not_expired_raise_maximum_recursion(self):
         url = Url.objects.create(url='https://example.com', expiration_date=now() + timedelta(days=1))
 
