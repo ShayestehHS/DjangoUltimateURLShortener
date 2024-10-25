@@ -9,7 +9,7 @@ from urls.models import URL, UrlUsage
 class UrlAdminForm(ModelForm):
     class Meta:
         model = URL
-        fields = ("url", "token", "expiration_date")
+        fields = ("url", "name", "token", "expiration_date")
 
     def clean_token(self):
         token = self.cleaned_data.get("token")
@@ -54,7 +54,8 @@ class UrlAdmin(admin.ModelAdmin):
         ready_to_set_token = URL.objects.all_ready_to_set_token().filter(token=token).first()
         if ready_to_set_token:
             ready_to_set_token.url = form.cleaned_data["url"]
-            ready_to_set_token.save(update_fields=["url"])
+            ready_to_set_token.name = form.cleaned_data["name"]
+            ready_to_set_token.save(update_fields=["url", "name"])
             return
 
         URL.objects.create(**form.cleaned_data)
